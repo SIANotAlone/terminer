@@ -18,9 +18,9 @@ type UserSignIn struct {
 }
 
 type User struct {
-	ID uuid.UUID `json:"json:" id"`
-	FirstName string `json:"first_name"`
-	LastName string `json:"last_name"`
-	Country string `json:"country"`
-	Email string `json:"email"`
+	ID        uuid.UUID `json:"id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+	Country   string    `json:"country"`
+	Email     string    `json:"email"`
 }

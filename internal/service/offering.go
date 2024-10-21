@@ -26,3 +26,7 @@ func (s *OfferingService) UpdateService(service models.ServiceUpdate) error {
 func (s *OfferingService) DeleteService(id uuid.UUID) error {
 	return s.repo.DeleteService(id)
 }
+
+func (s *OfferingService) GetTypes() ([]models.ServiceType, error) {
+	return s.repo.GetTypes()
+}

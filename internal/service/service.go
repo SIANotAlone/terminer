@@ -17,6 +17,7 @@ type Offering interface {
 	CreateService(offering models.NewService) (uuid.UUID, error)
 	UpdateService(models.ServiceUpdate) error
 	DeleteService(id uuid.UUID) error
+	GetTypes() ([]models.ServiceType, error)
 }
 type User interface {
 	GetAllUsers() ([]models.User, error)

@@ -13,6 +13,7 @@ const (
 	servicesTable       = "main.service"
 	availableForTable   = "main.available_for"
 	available_timeTable = "main.available_time"
+	service_typeTable   = "main.service_type"
 	time_layout         = "15:04"
 )
 
@@ -83,4 +84,21 @@ func (r *OfferingPostgres) DeleteService(id uuid.UUID) error {
 		return err
 	}
 	return nil
+}
+
+func (r *OfferingPostgres) GetTypes() ([]models.ServiceType, error) {
+	query := fmt.Sprintf("SELECT id, name FROM %s", service_typeTable)
+	row, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	var service_types []models.ServiceType
+	for row.Next() {
+		var service_type models.ServiceType
+		if err := row.Scan(&service_type.ID, &service_type.Name); err != nil {
+			return nil, err
+		}
+		service_types = append(service_types, service_type)
+	}
+	return service_types, nil
 }

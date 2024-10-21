@@ -46,3 +46,8 @@ type ServiceUpdate struct {
 type ServiceDelete struct {
 	UUID uuid.UUID `json:"id" binding:"required" omitempty:"true"`
 }
+
+type ServiceType struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}

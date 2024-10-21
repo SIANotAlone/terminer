@@ -63,3 +63,14 @@ func (h *Handler) DeleteService(c *gin.Context) {
 		"message": "ok",
 	})
 }
+
+func (h *Handler) GetTypes(c *gin.Context) {
+
+	types, err := h.services.Offering.GetTypes()
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, types)
+
+}
