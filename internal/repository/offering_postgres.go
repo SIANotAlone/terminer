@@ -1,0 +1,86 @@
+package repository
+
+import (
+	"fmt"
+	"terminer/internal/models"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+)
+
+const (
+	servicesTable       = "main.service"
+	availableForTable   = "main.available_for"
+	available_timeTable = "main.available_time"
+	time_layout         = "15:04"
+)
+
+type OfferingPostgres struct {
+	db *sqlx.DB
+}
+
+func NewOfferingPostgres(db *sqlx.DB) *OfferingPostgres {
+	return &OfferingPostgres{db: db}
+}
+
+func (r *OfferingPostgres) CreateOffering(offering models.NewService) (uuid.UUID, error) {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return uuid.Nil, err
+	}
+	var id uuid.UUID
+	create_service_query := fmt.Sprintf("INSERT INTO %s (name, description, date, date_end, service_type_id, performer_id, available_for_all) VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, $6) RETURNING uuid", servicesTable)
+	row := tx.QueryRow(create_service_query, offering.Service.Name, offering.Service.Description, offering.Service.DateEnd, offering.Service.ServiceType, offering.Service.PerformerID, offering.Service.Available_for_all)
+	if err := row.Scan(&id); err != nil {
+		tx.Rollback()
+		return id, err
+	}
+	for _, value := range offering.Available_for {
+		create_avalable_for_query := fmt.Sprintf("INSERT INTO %s (service_id, user_id) VALUES ($1, $2)", availableForTable)
+		_, err := tx.Exec(create_avalable_for_query, id, value.UserID)
+		if err != nil {
+			tx.Rollback()
+			return uuid.Nil, err
+		}
+	}
+	for _, value := range offering.Available_time {
+		create_available_time_query := fmt.Sprintf("INSERT INTO %s (service_id, time_start, time_end) VALUES ($1, $2, $3)", available_timeTable)
+		time_start, err := time.Parse(time_layout, value.TimeStart)
+		if err != nil {
+			tx.Rollback()
+			return uuid.Nil, err
+		}
+		time_end, err := time.Parse(time_layout, value.TimeEnd)
+		if err != nil {
+			tx.Rollback()
+			return uuid.Nil, err
+		}
+		_, err = tx.Exec(create_available_time_query, id, time_start.Format(time_layout), time_end.Format(time_layout))
+		if err != nil {
+			tx.Rollback()
+			return uuid.Nil, err
+		}
+	}
+
+	return id, tx.Commit()
+}
+
+func (r *OfferingPostgres) UpdateService(service models.ServiceUpdate) error {
+
+	query := fmt.Sprintf("UPDATE %s SET name = $1, description = $2, date_end = $3, service_type_id = $4 WHERE uuid = $5", servicesTable)
+	row := r.db.QueryRow(query, service.Name, service.Description, service.DateEnd, service.ServiceType, service.UUID)
+	if err := row.Err(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *OfferingPostgres) DeleteService(id uuid.UUID) error {
+	query := fmt.Sprintf("DELETE FROM %s WHERE uuid = $1", servicesTable)
+	row := r.db.QueryRow(query, id)
+	if err := row.Err(); err != nil {
+		return err
+	}
+	return nil
+}

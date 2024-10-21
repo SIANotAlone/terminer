@@ -1,0 +1,9 @@
+server:
+  port: 9999
+
+db:
+  host: 127.0.0.1
+  port: 5432
+  username: postgres
+  database: terminer
+  sslmode: disable
