@@ -102,3 +102,44 @@ func (r *OfferingPostgres) GetTypes() ([]models.ServiceType, error) {
 	}
 	return service_types, nil
 }
+
+func (r *OfferingPostgres) GetServiceOwner(id uuid.UUID) (uuid.UUID, error) {
+	query := fmt.Sprintf("SELECT performer_id FROM %s WHERE uuid = $1", servicesTable)
+	row := r.db.QueryRow(query, id)
+	var owner_id uuid.UUID
+	if err := row.Scan(&owner_id); err != nil {
+		return owner_id, err
+	}
+	return owner_id, nil
+}
+
+func (r *OfferingPostgres) CreateServiceType(s models.ServiceType) error {
+	query := fmt.Sprintf("INSERT INTO %s (name) VALUES ($1)", service_typeTable)
+	_, err := r.db.Exec(query, s.Name)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *OfferingPostgres) GetMyServices(user_id uuid.UUID) ([]models.MyService, error) {
+	query := `select dc.uuid, dc.name, dc.description, dc.date, dc.date_end, st.name as service_type from main.service dc
+	left join main.user u on dc.performer_id = u.uuid
+	left join main.service_type st on dc.service_type_id = st.id 
+	where dc.performer_id = $1 and date_end < CURRENT_DATE`
+	var myservices []models.MyService
+	row, err := r.db.Query(query, user_id)
+	if err != nil {
+		return nil, err
+	}
+	for row.Next() {
+		var ms models.MyService
+		if err := row.Scan(&ms.ID, &ms.Name, &ms.Description, &ms.Date, &ms.DateEnd, &ms.ServiceType); err != nil {
+			return nil, err
+		}
+		myservices = append(myservices, ms)
+	}
+	
+
+	return myservices, nil
+}

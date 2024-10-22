@@ -1,14 +1,17 @@
 package repository
 
 import (
+	"database/sql"
 	"fmt"
 	"terminer/internal/models"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
 const (
-	userTable = "main.user"
+	userTable  = "main.user"
+	adminTable = "main.admin"
 )
 
 type UserPostgres struct {
@@ -36,4 +39,19 @@ func (r *UserPostgres) GetAllUsers() ([]models.User, error) {
 	}
 	return users, nil
 
+}
+
+func (r *UserPostgres) IsAdmin(id uuid.UUID) (bool, error) {
+	query := fmt.Sprintf("SELECT user_id FROM %s WHERE user_id = $1", adminTable)
+	row := r.db.QueryRow(query, id)
+	var admin_id uuid.UUID
+	if err := row.Scan(&admin_id); err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+	}
+	if admin_id == id {
+		return true, nil
+	}
+	return false, nil
 }

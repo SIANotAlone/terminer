@@ -3,6 +3,8 @@ package service
 import (
 	"terminer/internal/models"
 	"terminer/internal/repository"
+
+	"github.com/google/uuid"
 )
 
 type UserService struct {
@@ -15,4 +17,8 @@ func NewUserService(repo repository.User) *UserService {
 
 func (s *UserService) GetAllUsers() ([]models.User, error) {
 	return s.repo.GetAllUsers()
+}
+
+func (s *UserService) IsAdmin(id uuid.UUID) (bool, error) {
+	return s.repo.IsAdmin(id)
 }

@@ -51,3 +51,12 @@ type ServiceType struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
+
+type MyService struct {
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Date        time.Time `json:"date"`
+	DateEnd     time.Time `json:"date_end"`
+	ServiceType string    `json:"service_type"`
+}

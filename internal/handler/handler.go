@@ -31,6 +31,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			service.POST("/update", h.UpdateService)
 			service.POST("/delete", h.DeleteService)
 			service.GET("/gettypes", h.GetTypes)
+			service.POST("/createservicetype", h.CreateServiceType)
+			service.GET("/getmyservices", h.GetMyServices)
 		}
 		user := api.Group("/user")
 		{

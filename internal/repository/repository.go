@@ -17,10 +17,14 @@ type Offering interface {
 	UpdateService(models.ServiceUpdate) error
 	DeleteService(id uuid.UUID) error
 	GetTypes() ([]models.ServiceType, error)
+	GetServiceOwner(id uuid.UUID) (uuid.UUID, error)
+	CreateServiceType(models.ServiceType) (error)
+	GetMyServices(user_id uuid.UUID) ([]models.MyService, error)
 }
 
 type User interface {
 	GetAllUsers() ([]models.User, error)
+	IsAdmin(id uuid.UUID) (bool, error)
 }
 
 type Repository struct {

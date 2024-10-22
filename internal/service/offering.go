@@ -30,3 +30,15 @@ func (s *OfferingService) DeleteService(id uuid.UUID) error {
 func (s *OfferingService) GetTypes() ([]models.ServiceType, error) {
 	return s.repo.GetTypes()
 }
+
+func (s *OfferingService) GetServiceOwner(id uuid.UUID) (uuid.UUID, error) {
+	return s.repo.GetServiceOwner(id)
+}
+
+func (s *OfferingService) CreateServiceType(serviceType models.ServiceType) (error) {
+	return s.repo.CreateServiceType(serviceType)
+}
+
+func (s *OfferingService) GetMyServices(user_id uuid.UUID) ([]models.MyService, error) {
+	return s.repo.GetMyServices(user_id)
+}
