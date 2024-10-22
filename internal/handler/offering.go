@@ -134,3 +134,17 @@ func (h *Handler) GetMyServices(c *gin.Context) {
 	c.JSON(http.StatusOK, services)
 
 }
+
+func (h *Handler) GetAvailableServices(c *gin.Context) {
+	userId, err := getUserId(c)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	services, err := h.services.Offering.GetAvailableService(userId)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, services)
+}

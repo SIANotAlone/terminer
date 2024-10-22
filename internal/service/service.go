@@ -21,6 +21,7 @@ type Offering interface {
 	GetServiceOwner(id uuid.UUID) (uuid.UUID, error)
 	CreateServiceType(models.ServiceType) error
 	GetMyServices(user_id uuid.UUID) ([]models.MyService, error)
+	GetAvailableService(user_id uuid.UUID) ([]models.AvailableService, error)
 }
 type User interface {
 	GetAllUsers() ([]models.User, error)

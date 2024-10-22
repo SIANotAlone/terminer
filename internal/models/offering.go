@@ -36,11 +36,11 @@ type NewService struct {
 }
 
 type ServiceUpdate struct {
-	UUID        *uuid.UUID `json:"id" binding:"required" omitempty:"true"`
-	Name        *string    `json:"name" binding:"required" omitempty:"true"`
-	Description *string    `json:"description" binding:"required" omitempty:"true"`
-	DateEnd     *time.Time `json:"date_end" binding:"required" omitempty:"true"`
-	ServiceType *int       `json:"service_type" binding:"required" omitempty:"true"`
+	UUID        uuid.UUID `json:"id" binding:"required" omitempty:"true"`
+	Name        string    `json:"name" binding:"required" omitempty:"true"`
+	Description string    `json:"description" binding:"required" omitempty:"true"`
+	DateEnd     time.Time `json:"date_end" binding:"required" omitempty:"true"`
+	ServiceType int       `json:"service_type" binding:"required" omitempty:"true"`
 }
 
 type ServiceDelete struct {
@@ -56,6 +56,17 @@ type MyService struct {
 	ID          uuid.UUID `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
+	Date        time.Time `json:"date"`
+	DateEnd     time.Time `json:"date_end"`
+	ServiceType string    `json:"service_type"`
+}
+type AvailableService struct {
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	FirstName   string    `json:"first_name"`
+	LastName    string    `json:"last_name"`
+	Email       string    `json:"email"`
 	Date        time.Time `json:"date"`
 	DateEnd     time.Time `json:"date_end"`
 	ServiceType string    `json:"service_type"`

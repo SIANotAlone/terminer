@@ -139,7 +139,34 @@ func (r *OfferingPostgres) GetMyServices(user_id uuid.UUID) ([]models.MyService,
 		}
 		myservices = append(myservices, ms)
 	}
-	
 
 	return myservices, nil
+}
+
+func (r *OfferingPostgres) GetAvailableService(user_id uuid.UUID) ([]models.AvailableService, error) {
+	query := `select s.uuid as id,
+	s.name as service, s.description, uu.first_name as p1, uu.last_name as p2,
+	uu.email as p3, s.date, s.date_end, st.name as service_type
+	from main.available_for dc
+
+	left join main.user u on dc.user_id = u.uuid
+	left join main.service s on s.uuid = dc.service_id
+	left join main.user uu on s.performer_id = uu.uuid
+	left join main.service_type st on s.service_type_id = st.id
+
+	where dc.user_id =$1`
+	var available_services []models.AvailableService
+
+	row, err := r.db.Query(query, user_id)
+	if err != nil {
+		return nil, err
+	}
+	for row.Next() {
+		var ms models.AvailableService
+		if err := row.Scan(&ms.ID, &ms.Name, &ms.Description, &ms.FirstName, &ms.LastName, &ms.Email, &ms.Date, &ms.DateEnd, &ms.ServiceType); err != nil {
+			return nil, err
+		}
+		available_services = append(available_services, ms)
+	}
+	return available_services, nil
 }

@@ -42,3 +42,7 @@ func (s *OfferingService) CreateServiceType(serviceType models.ServiceType) (err
 func (s *OfferingService) GetMyServices(user_id uuid.UUID) ([]models.MyService, error) {
 	return s.repo.GetMyServices(user_id)
 }
+
+func (s *OfferingService) GetAvailableService(user_id uuid.UUID) ([]models.AvailableService, error) {
+	return s.repo.GetAvailableService(user_id)
+}
