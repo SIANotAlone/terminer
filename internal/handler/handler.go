@@ -34,11 +34,18 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			service.POST("/createservicetype", h.CreateServiceType)
 			service.GET("/getmyservices", h.GetMyServices)
 			service.GET("/available", h.GetAvailableServices)
+			service.GET("/availabletime", h.GetAvailableTime)
 		}
+		record := api.Group("/record")
+		{
+			record.POST("/create", h.CreateRecord)
+		}
+
 		user := api.Group("/user")
 		{
 			user.GET("/getallusers", h.GetAllUsers)
 		}
+
 		
 	}
 	return router

@@ -21,7 +21,12 @@ type Offering interface {
 	CreateServiceType(models.ServiceType) (error)
 	GetMyServices(user_id uuid.UUID) ([]models.MyService, error)
 	GetAvailableService(user_id uuid.UUID) ([]models.AvailableService, error)
+	GetAvailableTime(service_id uuid.UUID) ([]models.ServiceAvailableTime, error)
 }
+type Record interface {
+	CreateRecord(record models.NewRecord) (uuid.UUID, error)
+}
+
 
 type User interface {
 	GetAllUsers() ([]models.User, error)
@@ -32,6 +37,7 @@ type Repository struct {
 	Authorization
 	Offering
 	User
+	Record
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
@@ -39,5 +45,6 @@ func NewRepository(db *sqlx.DB) *Repository {
 		Authorization: NewAuthPostgres(db),
 		Offering:      NewOfferingPostgres(db),
 		User:          NewUserPostgres(db),
+		Record:        NewRecordPostgres(db),
 	}
 }

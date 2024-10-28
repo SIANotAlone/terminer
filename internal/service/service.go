@@ -22,7 +22,13 @@ type Offering interface {
 	CreateServiceType(models.ServiceType) error
 	GetMyServices(user_id uuid.UUID) ([]models.MyService, error)
 	GetAvailableService(user_id uuid.UUID) ([]models.AvailableService, error)
+	GetAvailableTime(service_id uuid.UUID) ([]models.ServiceAvailableTime, error)
 }
+
+type Record interface {
+	CreateRecord(record models.NewRecord) (uuid.UUID, error)
+}
+
 type User interface {
 	GetAllUsers() ([]models.User, error)
 	IsAdmin(id uuid.UUID) (bool, error)
@@ -32,6 +38,7 @@ type Service struct {
 	Authorization
 	Offering
 	User
+	Record
 }
 
 func NewService(repos *repository.Repository) *Service {
@@ -39,5 +46,6 @@ func NewService(repos *repository.Repository) *Service {
 		Authorization: NewAuthService(repos.Authorization),
 		Offering:      NewOfferingService(repos.Offering),
 		User:          NewUserService(repos.User),
+		Record:        NewRecordService(repos.Record),
 	}
 }

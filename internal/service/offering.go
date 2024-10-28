@@ -46,3 +46,7 @@ func (s *OfferingService) GetMyServices(user_id uuid.UUID) ([]models.MyService, 
 func (s *OfferingService) GetAvailableService(user_id uuid.UUID) ([]models.AvailableService, error) {
 	return s.repo.GetAvailableService(user_id)
 }
+
+func (s *OfferingService) GetAvailableTime(service_id uuid.UUID) ([]models.ServiceAvailableTime, error){
+	return s.repo.GetAvailableTime(service_id)
+}

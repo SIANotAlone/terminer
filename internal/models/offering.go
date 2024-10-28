@@ -71,3 +71,15 @@ type AvailableService struct {
 	DateEnd     time.Time `json:"date_end"`
 	ServiceType string    `json:"service_type"`
 }
+
+type ServiceAvailableTime struct {
+	ID        int       `json:"id"`
+	ServiceID uuid.UUID `json:"service_id"`
+	TimeStart time.Time `json:"time_start"`
+	TimeEnd   time.Time `json:"time_end"`
+	Booked    bool      `json:"booked"`
+}
+
+type ServiceAvailableTimeInput struct {
+	ID uuid.UUID `json:"service_id" binding:"required" omitempty:"true"`
+}

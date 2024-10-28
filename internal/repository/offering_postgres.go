@@ -126,7 +126,7 @@ func (r *OfferingPostgres) GetMyServices(user_id uuid.UUID) ([]models.MyService,
 	query := `select dc.uuid, dc.name, dc.description, dc.date, dc.date_end, st.name as service_type from main.service dc
 	left join main.user u on dc.performer_id = u.uuid
 	left join main.service_type st on dc.service_type_id = st.id 
-	where dc.performer_id = $1 and date_end < CURRENT_DATE`
+	where dc.performer_id = $1 and date_end > CURRENT_DATE`
 	var myservices []models.MyService
 	row, err := r.db.Query(query, user_id)
 	if err != nil {
@@ -145,16 +145,28 @@ func (r *OfferingPostgres) GetMyServices(user_id uuid.UUID) ([]models.MyService,
 
 func (r *OfferingPostgres) GetAvailableService(user_id uuid.UUID) ([]models.AvailableService, error) {
 	query := `select s.uuid as id,
-	s.name as service, s.description, uu.first_name as p1, uu.last_name as p2,
-	uu.email as p3, s.date, s.date_end, st.name as service_type
-	from main.available_for dc
+ s.name as service, s.description, uu.first_name as p1, uu.last_name as p2,
+ uu.email as p3, s.date, s.date_end, st.name as service_type
+from main.available_for dc
 
-	left join main.user u on dc.user_id = u.uuid
-	left join main.service s on s.uuid = dc.service_id
-	left join main.user uu on s.performer_id = uu.uuid
-	left join main.service_type st on s.service_type_id = st.id
+left join main.user u on dc.user_id = u.uuid
+left join main.service s on s.uuid = dc.service_id
+left join main.user uu on s.performer_id = uu.uuid
+left join main.service_type st on s.service_type_id = st.id
 
-	where dc.user_id =$1`
+where dc.user_id = $1 and date_end > CURRENT_DATE 
+union 
+select s.uuid as id, s.name as service, s.description, u.first_name as p1,
+u.last_name as p2, u.email as p3, s.date, s.date_end, st.name as service_type
+from main.service s
+
+left join main.user u on u.uuid = s.performer_id
+left join main.service_type st on st.id = s.service_type_id
+where s.available_for_all = true and date_end > CURRENT_DATE 
+and s.performer_id != $1
+
+
+`
 	var available_services []models.AvailableService
 
 	row, err := r.db.Query(query, user_id)
@@ -169,4 +181,24 @@ func (r *OfferingPostgres) GetAvailableService(user_id uuid.UUID) ([]models.Avai
 		available_services = append(available_services, ms)
 	}
 	return available_services, nil
+}
+
+func (r *OfferingPostgres) GetAvailableTime(service_id uuid.UUID) ([]models.ServiceAvailableTime, error) {
+	query := `select id, service_id, time_start, time_end, booked 
+		from main.available_time
+		where service_id = $1 and booked = false`
+	var available_times []models.ServiceAvailableTime
+	row, err := r.db.Query(query, service_id)
+	if err != nil {
+		return nil, err
+	}
+	for row.Next() {
+		var available_time models.ServiceAvailableTime
+		if err := row.Scan(&available_time.ID, &available_time.ServiceID, &available_time.TimeStart,
+			&available_time.TimeEnd, &available_time.Booked); err != nil {
+			return nil, err
+		}
+		available_times = append(available_times, available_time)
+	}
+	return available_times, nil
 }

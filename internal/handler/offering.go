@@ -148,3 +148,17 @@ func (h *Handler) GetAvailableServices(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, services)
 }
+
+func (h *Handler) GetAvailableTime(c *gin.Context) {
+	var serviceID models.ServiceAvailableTimeInput
+	if err := c.BindJSON(&serviceID); err != nil {
+		NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	available_times, err := h.services.Offering.GetAvailableTime(serviceID.ID)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, available_times)
+}
