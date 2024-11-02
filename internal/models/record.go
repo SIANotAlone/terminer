@@ -8,3 +8,8 @@ type NewRecord struct {
 	UserID    uuid.UUID `json:"-"`
 	AvailableTimeID int `json:"available_time_id" binding:"required" omitempty:"true"`
 }
+
+type DoneRecord struct {
+	ID uuid.UUID `json:"id" binding:"required" omitempty:"true"`
+}
+

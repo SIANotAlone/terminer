@@ -17,3 +17,11 @@ func NewRecordService(repo repository.Record) *RecordService {
 func (s *RecordService) CreateRecord(record models.NewRecord) (uuid.UUID, error) {
 	return s.repo.CreateRecord(record)
 }
+
+func (s *RecordService) DoneRecord(id uuid.UUID, user uuid.UUID) (error) {
+	return s.repo.DoneRecord(id, user)
+}
+
+func (s *RecordService) ConfirmRecord(id uuid.UUID, user uuid.UUID) (error) {
+	return s.repo.ConfirmRecord(id, user)
+}

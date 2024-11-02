@@ -39,6 +39,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		record := api.Group("/record")
 		{
 			record.POST("/create", h.CreateRecord)
+			record.POST("/done", h.DoneRecord)
+			record.POST("/confirm", h.ConfirmRecord)
 		}
 
 		user := api.Group("/user")

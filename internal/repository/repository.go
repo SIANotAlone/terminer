@@ -25,6 +25,10 @@ type Offering interface {
 }
 type Record interface {
 	CreateRecord(record models.NewRecord) (uuid.UUID, error)
+	DoneRecord(id uuid.UUID, user uuid.UUID) (error)
+	ConfirmRecord(id uuid.UUID, user uuid.UUID) error
+
+
 }
 
 
