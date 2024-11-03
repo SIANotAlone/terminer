@@ -31,6 +31,17 @@ type Record interface {
 	ConfirmRecord(id uuid.UUID, user uuid.UUID) error
 }
 
+type Comment interface {
+	CreateComment(comment models.Comment) (uuid.UUID, error)
+	UpdateComment(comment models.UpdateComment) error
+	DeleteComment(id uuid.UUID, user uuid.UUID) error
+}
+
+type Termin interface {
+	GetAllPerformerTermins(user_id uuid.UUID) ([]models.Termin, error)
+	GetAllUserTermins(user_id uuid.UUID) ([]models.Termin, error)
+}
+
 type User interface {
 	GetAllUsers() ([]models.User, error)
 	IsAdmin(id uuid.UUID) (bool, error)
@@ -41,6 +52,8 @@ type Service struct {
 	Offering
 	User
 	Record
+	Comment
+	Termin
 }
 
 func NewService(repos *repository.Repository) *Service {
@@ -49,5 +62,7 @@ func NewService(repos *repository.Repository) *Service {
 		Offering:      NewOfferingService(repos.Offering),
 		User:          NewUserService(repos.User),
 		Record:        NewRecordService(repos.Record),
+		Comment:       NewCommentService(repos.Comment),
+		Termin:        NewTerminService(repos.Termin),
 	}
 }

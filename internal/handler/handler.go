@@ -47,7 +47,18 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		{
 			user.GET("/getallusers", h.GetAllUsers)
 		}
-
+		comment := api.Group("/comment")
+		{
+			comment.POST("/create", h.CreateComment)
+			comment.POST("/update", h.UpdateComment)
+			comment.POST("/delete", h.DeleteComment)
+			
+		}
+		Termin := api.Group("/termin")
+		{
+			Termin.GET("/getallperformertermins", h.GetAllPerformerTermins)
+			Termin.GET("/getallusertermins", h.GetAllUserTermins)
+		}
 		
 	}
 	return router

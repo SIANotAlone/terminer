@@ -18,19 +18,28 @@ type Offering interface {
 	DeleteService(id uuid.UUID) error
 	GetTypes() ([]models.ServiceType, error)
 	GetServiceOwner(id uuid.UUID) (uuid.UUID, error)
-	CreateServiceType(models.ServiceType) (error)
+	CreateServiceType(models.ServiceType) error
 	GetMyServices(user_id uuid.UUID) ([]models.MyService, error)
 	GetAvailableService(user_id uuid.UUID) ([]models.AvailableService, error)
 	GetAvailableTime(service_id uuid.UUID) ([]models.ServiceAvailableTime, error)
 }
-type Record interface {
-	CreateRecord(record models.NewRecord) (uuid.UUID, error)
-	DoneRecord(id uuid.UUID, user uuid.UUID) (error)
-	ConfirmRecord(id uuid.UUID, user uuid.UUID) error
 
-
+type Comment interface {
+	CreateComment(comment models.Comment) (uuid.UUID, error)
+	UpdateComment(comment models.UpdateComment) error
+	DeleteComment(id uuid.UUID, user uuid.UUID) error
 }
 
+type Record interface {
+	CreateRecord(record models.NewRecord) (uuid.UUID, error)
+	DoneRecord(id uuid.UUID, user uuid.UUID) error
+	ConfirmRecord(id uuid.UUID, user uuid.UUID) error
+}
+
+type Termin interface {
+	GetAllPerformerTermins(user_id uuid.UUID) ([]models.Termin, error)
+	GetAllUserTermins(user_id uuid.UUID) ([]models.Termin, error)
+}
 
 type User interface {
 	GetAllUsers() ([]models.User, error)
@@ -42,6 +51,8 @@ type Repository struct {
 	Offering
 	User
 	Record
+	Comment
+	Termin
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
@@ -50,5 +61,7 @@ func NewRepository(db *sqlx.DB) *Repository {
 		Offering:      NewOfferingPostgres(db),
 		User:          NewUserPostgres(db),
 		Record:        NewRecordPostgres(db),
+		Comment:       NewCommentPostgres(db),
+		Termin:        NewTerminPostgres(db),
 	}
 }
