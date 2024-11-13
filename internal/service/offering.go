@@ -2,6 +2,7 @@ package service
 
 import (
 	"terminer/internal/models"
+	"terminer/internal/observer"
 	"terminer/internal/repository"
 
 	"github.com/google/uuid"
@@ -16,6 +17,15 @@ func NewOfferingService(repo repository.Offering) *OfferingService {
 }
 
 func (s *OfferingService) CreateService(offering models.NewService) (uuid.UUID, error) {
+
+	obs := observer.ConcreteObserver{}
+	subject := observer.ConcreteSubject{}
+	subject.Register(&obs)
+	subject.Notify("351853753", "Для вас доступна нова послуга...")
+
+	// bot := bot.NewTelegramBot(os.Getenv("TELEGRAM_BOT_TOKEN"))
+	// bot.Notify("351853753", "Для вас доступна нова послуга...")
+
 	return s.repo.CreateOffering(offering)
 }
 
@@ -35,7 +45,7 @@ func (s *OfferingService) GetServiceOwner(id uuid.UUID) (uuid.UUID, error) {
 	return s.repo.GetServiceOwner(id)
 }
 
-func (s *OfferingService) CreateServiceType(serviceType models.ServiceType) (error) {
+func (s *OfferingService) CreateServiceType(serviceType models.ServiceType) error {
 	return s.repo.CreateServiceType(serviceType)
 }
 
@@ -47,6 +57,6 @@ func (s *OfferingService) GetAvailableService(user_id uuid.UUID) ([]models.Avail
 	return s.repo.GetAvailableService(user_id)
 }
 
-func (s *OfferingService) GetAvailableTime(service_id uuid.UUID) ([]models.ServiceAvailableTime, error){
+func (s *OfferingService) GetAvailableTime(service_id uuid.UUID) ([]models.ServiceAvailableTime, error) {
 	return s.repo.GetAvailableTime(service_id)
 }
