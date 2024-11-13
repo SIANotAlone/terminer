@@ -26,7 +26,7 @@ func (t *telegramBot) Notify(chatID string, message string) error {
 
 	// Створюємо повідомлення
 	msg := tgbotapi.NewMessage(chatIDInt, message)
-
+	msg.ParseMode = "MarkdownV2"
 	// Відправляємо повідомлення
 	_, err = bot.Send(msg)
 	if err != nil {

@@ -2,9 +2,11 @@ package service
 
 import (
 	"fmt"
+	"strconv"
 	"terminer/internal/models"
 	"terminer/internal/observer"
 	"terminer/internal/repository"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -25,8 +27,9 @@ func (s *OfferingService) CreateService(offering models.NewService) (uuid.UUID, 
 	obs := observer.ConcreteObserver{}
 	subject := observer.ConcreteSubject{}
 	subject.Register(&obs)
-	message := fmt.Sprintf("Для вас доступна нова послуга... \n%s\n%s",
-		offering.Service.Name, offering.Service.Description)
+	message := fmt.Sprintf("Для *Вас* доступна нова __*послуга*__😍 \nНазва: %s\nОпис: %s\nПослуга доступна до: %s",
+		offering.Service.Name, offering.Service.Description,
+		s.getEscapedDate(offering.Service.DateEnd))
 
 	if offering.Service.Available_for_all == true {
 		s.notificateAllUsers(&subject, message)
@@ -98,4 +101,10 @@ func (s *OfferingService) notificate_available_for_users(subject *observer.Concr
 
 	}
 
+}
+
+func (s *OfferingService) getEscapedDate(date time.Time) string {
+
+	str_date := "*" + strconv.Itoa(date.Day()) + "\\." + strconv.Itoa(int(date.Month())) + "\\." + strconv.Itoa(date.Year()) + "*"
+	return str_date
 }
