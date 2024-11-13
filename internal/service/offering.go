@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"terminer/internal/models"
 	"terminer/internal/observer"
 	"terminer/internal/repository"
@@ -21,11 +22,28 @@ func (s *OfferingService) CreateService(offering models.NewService) (uuid.UUID, 
 	obs := observer.ConcreteObserver{}
 	subject := observer.ConcreteSubject{}
 	subject.Register(&obs)
-	subject.Notify("351853753", "Для вас доступна нова послуга...")
+	message := fmt.Sprintf("Для вас доступна нова послуга... \n%s\n%s",
+		offering.Service.Name, offering.Service.Description)
 
-	// bot := bot.NewTelegramBot(os.Getenv("TELEGRAM_BOT_TOKEN"))
-	// bot.Notify("351853753", "Для вас доступна нова послуга...")
+	if offering.Service.Available_for_all == true {
+		users, err := s.repo.GetAllUsersTelegramID()
+		if err != nil {
+			println(err)
+		}
+		for _, user := range users {
+			subject.Notify(user, message)
+		}
+		return s.repo.CreateOffering(offering)
+	}
 
+	for _, user := range offering.Available_for {
+		tg_id, err := s.repo.GetUserTelegramID(user.UserID)
+		if err != nil {
+			println(err)
+		}
+		subject.Notify(tg_id, message)
+		return s.repo.CreateOffering(offering)
+	}
 	return s.repo.CreateOffering(offering)
 }
 
@@ -59,4 +77,12 @@ func (s *OfferingService) GetAvailableService(user_id uuid.UUID) ([]models.Avail
 
 func (s *OfferingService) GetAvailableTime(service_id uuid.UUID) ([]models.ServiceAvailableTime, error) {
 	return s.repo.GetAvailableTime(service_id)
+}
+
+func (s *OfferingService) GetUserTelegramID(user_id uuid.UUID) (string, error) {
+	return s.repo.GetUserTelegramID(user_id)
+}
+
+func (s *OfferingService) GetAllUsersTelegramID() ([]string, error) {
+	return s.repo.GetAllUsersTelegramID()
 }

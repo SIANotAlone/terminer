@@ -23,6 +23,9 @@ type Offering interface {
 	GetMyServices(user_id uuid.UUID) ([]models.MyService, error)
 	GetAvailableService(user_id uuid.UUID) ([]models.AvailableService, error)
 	GetAvailableTime(service_id uuid.UUID) ([]models.ServiceAvailableTime, error)
+
+	GetUserTelegramID(user_id uuid.UUID) (string, error)
+	GetAllUsersTelegramID() ([]string, error)
 }
 
 type Record interface {
