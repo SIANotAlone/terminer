@@ -1,8 +1,12 @@
 package service
 
 import (
+	"fmt"
+	"strconv"
 	"terminer/internal/models"
+	"terminer/internal/observer"
 	"terminer/internal/repository"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -16,7 +20,25 @@ func NewOfferingService(repo repository.Offering) *OfferingService {
 }
 
 func (s *OfferingService) CreateService(offering models.NewService) (uuid.UUID, error) {
-	return s.repo.CreateOffering(offering)
+	repo, err := s.repo.CreateOffering(offering)
+	if err != nil {
+		fmt.Println(err)
+	}
+	obs := observer.ConcreteObserver{}
+	subject := observer.ConcreteSubject{}
+	subject.Register(&obs)
+	message := fmt.Sprintf("Для *Вас* доступна нова __*послуга*__😍 \nНазва: %s\nОпис: %s\nПослуга доступна до: %s",
+		offering.Service.Name, offering.Service.Description,
+		s.getEscapedDate(offering.Service.DateEnd))
+
+	if offering.Service.Available_for_all == true {
+		s.notificateAllUsers(&subject, message)
+		return repo, nil
+	} else {
+		s.notificate_available_for_users(&subject, message, offering.Available_for)
+	}
+
+	return repo, nil
 }
 
 func (s *OfferingService) UpdateService(service models.ServiceUpdate) error {
@@ -35,7 +57,7 @@ func (s *OfferingService) GetServiceOwner(id uuid.UUID) (uuid.UUID, error) {
 	return s.repo.GetServiceOwner(id)
 }
 
-func (s *OfferingService) CreateServiceType(serviceType models.ServiceType) (error) {
+func (s *OfferingService) CreateServiceType(serviceType models.ServiceType) error {
 	return s.repo.CreateServiceType(serviceType)
 }
 
@@ -47,6 +69,42 @@ func (s *OfferingService) GetAvailableService(user_id uuid.UUID) ([]models.Avail
 	return s.repo.GetAvailableService(user_id)
 }
 
-func (s *OfferingService) GetAvailableTime(service_id uuid.UUID) ([]models.ServiceAvailableTime, error){
+func (s *OfferingService) GetAvailableTime(service_id uuid.UUID) ([]models.ServiceAvailableTime, error) {
 	return s.repo.GetAvailableTime(service_id)
+}
+
+func (s *OfferingService) GetUserTelegramID(user_id uuid.UUID) (string, error) {
+	return s.repo.GetUserTelegramID(user_id)
+}
+
+func (s *OfferingService) GetAllUsersTelegramID() ([]string, error) {
+	return s.repo.GetAllUsersTelegramID()
+}
+
+func (s *OfferingService) notificateAllUsers(subject *observer.ConcreteSubject, message string) {
+	users, err := s.repo.GetAllUsersTelegramID()
+	if err != nil {
+		println(err)
+	}
+	for _, user := range users {
+		subject.Notify(user, message)
+	}
+}
+
+func (s *OfferingService) notificate_available_for_users(subject *observer.ConcreteSubject, message string, users []models.Available_for) {
+	for _, user := range users {
+		tg_id, err := s.repo.GetUserTelegramID(user.UserID)
+		if err != nil {
+			println(err)
+		}
+		subject.Notify(tg_id, message)
+
+	}
+
+}
+
+func (s *OfferingService) getEscapedDate(date time.Time) string {
+
+	str_date := "*" + strconv.Itoa(date.Day()) + "\\." + strconv.Itoa(int(date.Month())) + "\\." + strconv.Itoa(date.Year()) + "*"
+	return str_date
 }

@@ -202,3 +202,31 @@ func (r *OfferingPostgres) GetAvailableTime(service_id uuid.UUID) ([]models.Serv
 	}
 	return available_times, nil
 }
+
+func (r *OfferingPostgres) GetUserTelegramID(user_id uuid.UUID) (string, error) {
+	query := fmt.Sprintf("select telegram_chat_id from %s where uuid = $1", usersTable)
+	row := r.db.QueryRow(query, user_id)
+	var telegram_id string
+	if err := row.Scan(&telegram_id); err != nil {
+		return "", err
+	}
+	return telegram_id, nil
+}
+
+func (r *OfferingPostgres) GetAllUsersTelegramID() ([]string, error) {
+	query := fmt.Sprintf("select telegram_chat_id from %s where telegram_chat_id IS NOT NULL", usersTable)
+
+	row, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	var telegram_ids []string
+	for row.Next() {
+		var telegram_id string
+		if err := row.Scan(&telegram_id); err != nil {
+			return nil, err
+		}
+		telegram_ids = append(telegram_ids, telegram_id)
+	}
+	return telegram_ids, nil
+}
