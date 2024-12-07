@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
 )
 
 type Authorization interface {
@@ -37,6 +38,9 @@ type Record interface {
 	CreateRecord(record models.NewRecord) (uuid.UUID, error)
 	DoneRecord(id uuid.UUID, user uuid.UUID) error
 	ConfirmRecord(id uuid.UUID, user uuid.UUID) error
+	GetServiceOwnerTelegram(id uuid.UUID) (string, error)
+	GetUserName(user_id uuid.UUID) (string, error)
+	GetServiceName(id uuid.UUID) (string, error)
 }
 
 type Termin interface {
@@ -56,9 +60,11 @@ type Repository struct {
 	Record
 	Comment
 	Termin
+	logger logrus.Logger
+
 }
 
-func NewRepository(db *sqlx.DB) *Repository {
+func NewRepository(db *sqlx.DB, logger *logrus.Logger) *Repository {
 	return &Repository{
 		Authorization: NewAuthPostgres(db),
 		Offering:      NewOfferingPostgres(db),
@@ -66,5 +72,6 @@ func NewRepository(db *sqlx.DB) *Repository {
 		Record:        NewRecordPostgres(db),
 		Comment:       NewCommentPostgres(db),
 		Termin:        NewTerminPostgres(db),
+		logger:        *logger,
 	}
 }

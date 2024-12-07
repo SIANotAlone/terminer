@@ -5,6 +5,7 @@ import (
 	"terminer/internal/repository"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type Authorization interface {
@@ -32,6 +33,10 @@ type Record interface {
 	CreateRecord(record models.NewRecord) (uuid.UUID, error)
 	DoneRecord(id uuid.UUID, user uuid.UUID) error
 	ConfirmRecord(id uuid.UUID, user uuid.UUID) error
+
+	GetServiceOwnerTelegram(id uuid.UUID) (string, error)
+	GetUserName(user_id uuid.UUID) (string, error)
+	GetServiceName(id uuid.UUID) (string, error)
 }
 
 type Comment interface {
@@ -57,15 +62,17 @@ type Service struct {
 	Record
 	Comment
 	Termin
+	logger logrus.Logger
 }
 
-func NewService(repos *repository.Repository) *Service {
+func NewService(repos *repository.Repository, logger *logrus.Logger) *Service {
 	return &Service{
 		Authorization: NewAuthService(repos.Authorization),
-		Offering:      NewOfferingService(repos.Offering),
+		Offering:      NewOfferingService(repos.Offering, logger),
 		User:          NewUserService(repos.User),
-		Record:        NewRecordService(repos.Record),
+		Record:        NewRecordService(repos.Record, logger),
 		Comment:       NewCommentService(repos.Comment),
 		Termin:        NewTerminService(repos.Termin),
+		logger:        *logger,
 	}
 }

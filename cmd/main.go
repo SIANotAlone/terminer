@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"os"
+	"os/signal"
 	"terminer"
 	"terminer/internal/handler"
 	"terminer/internal/repository"
@@ -14,12 +16,16 @@ import (
 )
 
 func main() {
-	logrus.SetFormatter(&logrus.JSONFormatter{})
+	// TODO add logger to all services and repos
+	// TODO add statistics service
+	logger := logrus.New()
+	logger.SetOutput(os.Stdout)
+	logger.SetFormatter(&logrus.JSONFormatter{})
 	if err := initConfig(); err != nil {
-		logrus.Fatalf("Failed to init config: %s", err.Error())
+		logger.Fatalf("Failed to init config: %s", err.Error())
 	}
 	if err := godotenv.Load(); err != nil {
-		logrus.Fatal("Error loading .env file")
+		logger.Fatal("Error loading .env file")
 	}
 	db, err := repository.NewPostgres(&repository.Config{
 		Host:     viper.GetString("db.host"),
@@ -30,16 +36,31 @@ func main() {
 		SSLMode:  viper.GetString("db.sslmode"),
 	})
 	if err != nil {
-		logrus.Fatalf("Failed to init db: %s", err.Error())
+		logger.Fatalf("Failed to init db: %s", err.Error())
 	}
-	repos := repository.NewRepository(db)
-	services := service.NewService(repos)
+	repos := repository.NewRepository(db, logger)
+	services := service.NewService(repos, logger)
 	handlers := handler.NewHandler(services)
 
 	server := new(terminer.Server)
-	if err := server.Run(viper.GetString("server.port"), handlers.InitRoutes()); err != nil {
-		logrus.Fatalf("Failed to start server: %s", err.Error())
+	
+	go func ()  {
+		if err := server.Run(viper.GetString("server.port"), handlers.InitRoutes()); err != nil {
+			logger.Fatalf("Failed to start server: %s", err.Error())
+		}
+	} ()
+	logger.Print("Server started")
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+
+	if err := server.Shutdown(context.Background()); err != nil {
+		logger.Fatalf("Failed to shutdown server: %s", err.Error())
 	}
+	if err := db.Close(); err != nil {
+		logger.Fatalf("Failed to close db: %s", err.Error())
+	}
+	
 }
 
 func initConfig() error {

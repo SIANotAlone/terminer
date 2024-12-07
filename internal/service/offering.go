@@ -9,20 +9,22 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type OfferingService struct {
-	repo repository.Offering
+	repo   repository.Offering
+	logger logrus.Logger
 }
 
-func NewOfferingService(repo repository.Offering) *OfferingService {
-	return &OfferingService{repo: repo}
+func NewOfferingService(repo repository.Offering, logger *logrus.Logger) *OfferingService {
+	return &OfferingService{repo: repo, logger: *logger}
 }
 
 func (s *OfferingService) CreateService(offering models.NewService) (uuid.UUID, error) {
 	repo, err := s.repo.CreateOffering(offering)
 	if err != nil {
-		fmt.Println(err)
+		s.logger.Warn(err)
 	}
 	obs := observer.ConcreteObserver{}
 	subject := observer.ConcreteSubject{}
@@ -37,7 +39,6 @@ func (s *OfferingService) CreateService(offering models.NewService) (uuid.UUID, 
 	} else {
 		s.notificate_available_for_users(&subject, message, offering.Available_for)
 	}
-
 	return repo, nil
 }
 
@@ -84,7 +85,7 @@ func (s *OfferingService) GetAllUsersTelegramID() ([]string, error) {
 func (s *OfferingService) notificateAllUsers(subject *observer.ConcreteSubject, message string) {
 	users, err := s.repo.GetAllUsersTelegramID()
 	if err != nil {
-		println(err)
+		s.logger.Warn(err)
 	}
 	for _, user := range users {
 		subject.Notify(user, message)
@@ -95,7 +96,7 @@ func (s *OfferingService) notificate_available_for_users(subject *observer.Concr
 	for _, user := range users {
 		tg_id, err := s.repo.GetUserTelegramID(user.UserID)
 		if err != nil {
-			println(err)
+			s.logger.Warn(err)
 		}
 		subject.Notify(tg_id, message)
 

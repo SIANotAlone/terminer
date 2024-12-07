@@ -165,7 +165,6 @@ left join main.service_type st on st.id = s.service_type_id
 where s.available_for_all = true and date_end > CURRENT_DATE 
 and s.performer_id != $1
 
-
 `
 	var available_services []models.AvailableService
 
