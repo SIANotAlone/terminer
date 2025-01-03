@@ -19,4 +19,5 @@ type Termin struct {
 	TimeEnd      string    `json:"time_end"`
 	Done         bool      `json:"done"`
 	User_confirm bool      `json:"user_confirm"`
+	User_record  string    `json:"user_record"`
 }
