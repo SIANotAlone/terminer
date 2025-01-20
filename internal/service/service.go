@@ -35,8 +35,10 @@ type Record interface {
 	ConfirmRecord(id uuid.UUID, user uuid.UUID) error
 
 	GetServiceOwnerTelegram(id uuid.UUID) (string, error)
+	GetRecordOwnerTelegram(record_id uuid.UUID) (string, error)
 	GetUserName(user_id uuid.UUID) (string, error)
 	GetServiceName(id uuid.UUID) (string, error)
+	GetServiceInfo(record_id uuid.UUID) (models.ServiceInfo, error)
 }
 
 type Comment interface {

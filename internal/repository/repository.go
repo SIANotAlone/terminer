@@ -39,8 +39,10 @@ type Record interface {
 	DoneRecord(id uuid.UUID, user uuid.UUID) error
 	ConfirmRecord(id uuid.UUID, user uuid.UUID) error
 	GetServiceOwnerTelegram(id uuid.UUID) (string, error)
+	GetRecordOwnerTelegram(record_id uuid.UUID) (string, error)
 	GetUserName(user_id uuid.UUID) (string, error)
 	GetServiceName(id uuid.UUID) (string, error)
+	GetServiceInfo(record_id uuid.UUID) (models.ServiceInfo, error)
 }
 
 type Termin interface {
@@ -61,7 +63,6 @@ type Repository struct {
 	Comment
 	Termin
 	logger logrus.Logger
-
 }
 
 func NewRepository(db *sqlx.DB, logger *logrus.Logger) *Repository {

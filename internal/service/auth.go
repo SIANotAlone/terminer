@@ -15,7 +15,7 @@ import (
 const (
 	salt      = "s4564tadaskldnmlad13mnlak23mdlamd"
 	signinkey = "kshabdnksndaskdnaksdnaksdan"
-	tokenTTL  = 24 * time.Hour
+	tokenTTL  = 744 * time.Hour // Строк дія авторизації 744 годин = 31 день
 )
 
 type AuthService struct {
