@@ -35,7 +35,7 @@ func (s *OfferingService) CreateService(offering models.NewService) (uuid.UUID, 
 	}
 
 	message := fmt.Sprintf("Для *Вас* доступна нова __*послуга*__😍 \nНазва: %s\nОпис: %s\nПослуга доступна до: %s\nПослуга доступна в проміжку: %s",
-		offering.Service.Name, offering.Service.Description,
+		escapeMarkdownV2(offering.Service.Name), escapeMarkdownV2(offering.Service.Description),
 		s.getEscapedDate(offering.Service.DateEnd), available_time)
 
 	if offering.Service.Available_for_all == true {
@@ -121,3 +121,5 @@ func (s *OfferingService) getEscapedDate(date time.Time) string {
 	str_date := "*" + strconv.Itoa(date.Day()) + "\\." + strconv.Itoa(int(date.Month())) + "\\." + strconv.Itoa(date.Year()) + "*"
 	return str_date
 }
+
+

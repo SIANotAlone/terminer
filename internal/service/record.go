@@ -37,7 +37,7 @@ func (s *RecordService) CreateRecord(record models.NewRecord) (uuid.UUID, error)
 	if err != nil {
 		s.logger.Warn(err)
 	}
-	message := fmt.Sprintf("Користувач __*%s*__ \nзаписався на вашу послугу: %s", user_name, service_name)
+	message := fmt.Sprintf("Користувач __*%s*__ \nзаписався на вашу послугу: %s", escapeMarkdownV2(user_name), escapeMarkdownV2(service_name))
 	owner_telegram_id, err := s.GetServiceOwnerTelegram(record.ServiceID)
 	if err != nil {
 		s.logger.Warn(err)
@@ -70,7 +70,8 @@ func (s *RecordService) DoneRecord(id uuid.UUID, user uuid.UUID) error {
 	record_date := service_info.RecordDate.Format("02.01.2006")
 	time_start := service_info.TimeStart.Format("15:04")
 	time_end := service_info.TimeEnd.Format("15:04")
-	message := fmt.Sprintf("__*%s*__ позначив ваш запис на послугу: __*%s*__  \nЗапис від %s\nУ проміжку між %s та %s\nПозначено як: __*Виконано*__\n", user_name, service_info.Name,
+	message := fmt.Sprintf("__*%s*__ позначив ваш запис на послугу: __*%s*__  \nЗапис від %s\nЗапис в проміжку між %s та %s\nПозначено як: __*Виконано*__\n",
+		escapeMarkdownV2(user_name), escapeMarkdownV2(service_info.Name),
 		escapeMarkdownV2(record_date), escapeMarkdownV2(time_start), escapeMarkdownV2(time_end))
 	subject.Notify(owner_telegram_id, message)
 	return nil
