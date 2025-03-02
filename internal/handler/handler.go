@@ -3,6 +3,7 @@ package handler
 import (
 	"terminer/internal/service"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,6 +18,13 @@ func NewHandler(services *service.Service) *Handler {
 }
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
+	router.Use(cors.New(cors.Config{
+		AllowAllOrigins: true, // Разрешить запросы с любых источников
+		AllowMethods: []string{
+			"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", // Разрешить все методы
+		},
+		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"}, // Разрешить указанные заголовки
+	}))
 	auth := router.Group("/auth")
 	{
 		auth.POST("/sign-up", h.SignUp)
@@ -34,7 +42,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			service.POST("/createservicetype", h.CreateServiceType)
 			service.GET("/getmyservices", h.GetMyServices)
 			service.GET("/available", h.GetAvailableServices)
-			service.GET("/availabletime", h.GetAvailableTime)
+			service.POST("/availabletime", h.GetAvailableTime)
 		}
 		record := api.Group("/record")
 		{
@@ -52,14 +60,15 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			comment.POST("/create", h.CreateComment)
 			comment.POST("/update", h.UpdateComment)
 			comment.POST("/delete", h.DeleteComment)
-			
+
 		}
 		Termin := api.Group("/termin")
 		{
 			Termin.GET("/getallperformertermins", h.GetAllPerformerTermins)
 			Termin.GET("/getallusertermins", h.GetAllUserTermins)
 		}
-		
+
 	}
+
 	return router
 }

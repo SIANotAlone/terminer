@@ -162,9 +162,11 @@ from main.service s
 
 left join main.user u on u.uuid = s.performer_id
 left join main.service_type st on st.id = s.service_type_id
-where s.available_for_all = true and date_end > CURRENT_DATE 
-and s.performer_id != $1
 
+where s.available_for_all = true and date_end >= CURRENT_DATE 
+and s.performer_id != $1
+-- Фильтр по количеству доступных записей
+and  (select count(*) from main.record r where r.service_id = s.uuid) < (select count(*) from main.available_time a where a.service_id =s.uuid )
 
 `
 	var available_services []models.AvailableService

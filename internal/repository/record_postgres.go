@@ -83,3 +83,71 @@ func (r *RecordPostgres) ConfirmRecord(id uuid.UUID, user uuid.UUID) error {
 
 	return nil
 }
+
+func (r *RecordPostgres) GetServiceOwnerTelegram(service_id uuid.UUID) (string, error) {
+	query := fmt.Sprintf(`SELECT u.telegram_chat_id  FROM main.service dc 
+	LEFT JOIN main.user u on dc.performer_id = u.uuid
+	WHERE dc.UUID = $1`)
+
+	var chat_id string
+	row := r.db.QueryRow(query, service_id)
+	if err := row.Scan(&chat_id); err != nil {
+		return "", err
+	}
+	return chat_id, nil
+}
+
+func (r *RecordPostgres) GetRecordOwnerTelegram(record_id uuid.UUID) (string, error) {
+	query := fmt.Sprintf(`select u.telegram_chat_id from main.record dc
+left join main.user u on u.uuid = dc.user_id
+where dc.uuid = $1
+`)
+
+	var chat_id string
+	row := r.db.QueryRow(query, record_id)
+	if err := row.Scan(&chat_id); err != nil {
+		return "", err
+	}
+	return chat_id, nil
+}
+
+func (r *RecordPostgres) GetUserName(user_id uuid.UUID) (string, error) {
+	query := `select dc.first_name || ' ' || dc.last_name as name from main.user dc
+	where dc.uuid  = $1`
+
+	var name string
+	row := r.db.QueryRow(query, user_id)
+	if err := row.Scan(&name); err != nil {
+		return "", err
+	}
+
+	return name, nil
+}
+
+func (r *RecordPostgres) GetServiceName(service_id uuid.UUID) (string, error) {
+	query := `select dc.name from main.service dc
+	where dc.uuid = $1`
+
+	var name string
+	row := r.db.QueryRow(query, service_id)
+	if err := row.Scan(&name); err != nil {
+		return "", err
+	}
+
+	return name, nil
+}
+
+func (r *RecordPostgres) GetServiceInfo(service_id uuid.UUID) (models.ServiceInfo, error) {
+	query := `select s.name, dc.date as rec_date, t.time_start, t.time_end from main.record dc
+left join main.service s on dc.service_id = s.uuid
+left join main.available_time t on t.id = dc.available_time_id
+where dc.uuid = $1`
+
+	var info models.ServiceInfo
+	row := r.db.QueryRow(query, service_id)
+	if err := row.Scan(&info.Name, &info.RecordDate, &info.TimeStart, &info.TimeEnd); err != nil {
+		return models.ServiceInfo{}, err
+	}
+
+	return info, nil
+}
