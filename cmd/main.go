@@ -9,11 +9,25 @@ import (
 	"terminer/internal/repository"
 	"terminer/internal/service"
 
+	_ "terminer/docs"
+
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
+
+// @Terminer API
+// @version 1.0
+// @description Terminer API
+// @Security ApiKeyAuth
+
+// @host localhost:9999
+// @BasePath /
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 
 func main() {
 	// TODO add logger to all services and repos
@@ -43,12 +57,12 @@ func main() {
 	handlers := handler.NewHandler(services)
 
 	server := new(terminer.Server)
-	
-	go func ()  {
+
+	go func() {
 		if err := server.Run(viper.GetString("server.port"), handlers.InitRoutes()); err != nil {
 			logger.Fatalf("Failed to start server: %s", err.Error())
 		}
-	} ()
+	}()
 	logger.Print("Server started")
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
@@ -60,7 +74,7 @@ func main() {
 	if err := db.Close(); err != nil {
 		logger.Fatalf("Failed to close db: %s", err.Error())
 	}
-	
+
 }
 
 func initConfig() error {

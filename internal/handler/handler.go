@@ -5,6 +5,9 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Handler struct {
@@ -18,6 +21,8 @@ func NewHandler(services *service.Service) *Handler {
 }
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	router.Use(cors.New(cors.Config{
 		AllowAllOrigins: true, // Разрешить запросы с любых источников
 		AllowMethods: []string{
@@ -33,6 +38,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	api := router.Group("/api", h.UserIdentity)
 	{
+
 		service := api.Group("/service")
 		{
 			service.POST("/create", h.CreateService)
@@ -43,6 +49,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			service.GET("/getmyservices", h.GetMyServices)
 			service.GET("/available", h.GetAvailableServices)
 			service.POST("/availabletime", h.GetAvailableTime)
+
 		}
 		record := api.Group("/record")
 		{
