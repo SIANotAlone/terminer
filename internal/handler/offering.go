@@ -43,6 +43,45 @@ func (h *Handler) CreateService(c *gin.Context) {
 
 }
 
+func (h *Handler) CreatePromoService(c *gin.Context) {
+	var input models.NewPromoService
+	userId, err := getUserId(c)
+	input.PromoService.PerformerID = userId
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if err := c.BindJSON(&input); err != nil {
+		NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	id, err := h.services.Offering.CreatePromoService(input)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"id": id,
+	})
+}
+
+func (h *Handler) ValidatePromoCode(c *gin.Context) {
+	var input models.PromocodeValidationInput
+	if err := c.BindJSON(&input); err != nil {
+		NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var valid models.PromocodeValidation
+	valid, err := h.services.Offering.ValidatePromoCode(input.Promocode)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, valid)
+}
+
 // @Summary      Оновлення послуги
 // @Description  Хендлер для оновлення даних послуги. Приймає структуру ServiceUpdate.
 // @Tags         Послуга
@@ -121,6 +160,64 @@ func (h *Handler) DeleteService(c *gin.Context) {
 
 	}
 
+}
+
+func (h *Handler) ActivatePromoCode(c *gin.Context) {
+	var input models.PromocodeActivationInput
+	if err := c.BindJSON(&input); err != nil {
+		NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	user_id, err := getUserId(c)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if err := h.services.Offering.ActivatePromoCode(input.Promocode, user_id); err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "promocode activated",
+		"status":  "ok",
+	})
+}
+
+func (h *Handler) GetMyActualServices(c *gin.Context) {
+
+	userId, err := getUserId(c)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	services, err := h.services.Offering.GetMyActualServices(userId)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, services)
+}
+
+func (h *Handler) GetMyHistory(c *gin.Context) {
+	var input models.MyHistoryServiceInput
+	if err := c.BindJSON(&input); err != nil {
+		fmt.Println(input.Limit, input.Offset)
+		NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	userId, err := getUserId(c)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	services, err := h.services.Offering.GetHistoryMyServices(userId, input.Limit, input.Offset)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, services)
 }
 
 // @Summary      Отримання типів послуг

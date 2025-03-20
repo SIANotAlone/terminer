@@ -47,6 +47,50 @@ func (s *OfferingService) CreateService(offering models.NewService) (uuid.UUID, 
 	return repo, nil
 }
 
+func (s *OfferingService) CreatePromoService(offering models.NewPromoService) (uuid.UUID, error) {
+	repo, err := s.repo.CreatePromoService(offering)
+	if err != nil {
+		s.logger.Warn(err)
+	}
+	return repo, nil
+}
+
+func (s OfferingService) ValidatePromoCode(code string) (models.PromocodeValidation, error) {
+	var validation models.PromocodeValidation
+	info, err := s.GetPromoCodeInfo(code)
+	if err != nil {
+		return validation, err
+	}
+	if info.Available_for > 0 {
+		validation.Valid = false
+	} else {
+		validation.Valid = true
+		validation.PromeService = info
+
+	}
+	return validation, nil
+}
+
+func (s OfferingService) ActivatePromoCode(code string, user_id uuid.UUID) error {
+	info, err := s.GetPromoCodeInfo(code)
+	if err != nil {
+		return err
+	}
+	return s.repo.ActivatePromoCode(info.Service_ID, user_id)
+}
+
+func (s *OfferingService) GetMyActualServices(user_id uuid.UUID) ([]models.MyActualService, error) {
+	return s.repo.GetMyActualServices(user_id)
+}
+
+func (s *OfferingService) GetHistoryMyServices(user_id uuid.UUID, limit int64, offset int64) ([]models.MyActualService, error) {
+	return s.repo.GetHistoryMyServices(user_id, limit, offset)
+}
+
+func (s *OfferingService) GetPromoCodeInfo(code string) (models.PromocodeInfo, error) {
+	return s.repo.GetPromoCodeInfo(code)
+}
+
 func (s *OfferingService) UpdateService(service models.ServiceUpdate) error {
 	return s.repo.UpdateService(service)
 }
@@ -121,5 +165,3 @@ func (s *OfferingService) getEscapedDate(date time.Time) string {
 	str_date := "*" + strconv.Itoa(date.Day()) + "\\." + strconv.Itoa(int(date.Month())) + "\\." + strconv.Itoa(date.Year()) + "*"
 	return str_date
 }
-
-

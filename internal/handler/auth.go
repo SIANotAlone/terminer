@@ -9,7 +9,7 @@ import (
 
 // @Summary      Реєстрація нового користувача
 // @Description  Хендлер для реєстрації нового користувача. Приймає дані користувача в форматі JSON та створює нового користувача.
-// @Tags         Користувач
+// @Tags         Авторизація/Реєстрація
 // @Accept       json
 // @Produce      json
 // @Param        input  body     models.UserRegistration  true  "Дані для реєстрації нового користувача"
@@ -39,7 +39,7 @@ func (h *Handler) SignUp(c *gin.Context) {
 
 // @Summary      Авторизація користувача
 // @Description  Хендлер для авторизації користувача. Приймає email та пароль для генерації токена.
-// @Tags         Користувач
+// @Tags         Авторизація/Реєстрація
 // @Accept       json
 // @Produce      json
 // @Param        input  body     models.UserSignIn  true  "Дані для авторизації користувача (email, пароль)"

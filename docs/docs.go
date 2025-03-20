@@ -742,7 +742,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Користувач"
+                    "Авторизація/Реєстрація"
                 ],
                 "summary": "Авторизація користувача",
                 "parameters": [
@@ -802,7 +802,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Користувач"
+                    "Авторизація/Реєстрація"
                 ],
                 "summary": "Реєстрація нового користувача",
                 "parameters": [
@@ -1144,7 +1144,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:9999",
+	Host:             "192.168.2.105:9999",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "",

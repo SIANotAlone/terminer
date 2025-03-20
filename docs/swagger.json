@@ -5,7 +5,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:9999",
+    "host": "192.168.2.105:9999",
     "basePath": "/",
     "paths": {
         "/api/record/confirm": {
@@ -735,7 +735,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Користувач"
+                    "Авторизація/Реєстрація"
                 ],
                 "summary": "Авторизація користувача",
                 "parameters": [
@@ -795,7 +795,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Користувач"
+                    "Авторизація/Реєстрація"
                 ],
                 "summary": "Реєстрація нового користувача",
                 "parameters": [

@@ -186,7 +186,7 @@ definitions:
     - email
     - password
     type: object
-host: localhost:9999
+host: 192.168.2.105:9999
 info:
   contact: {}
   description: Terminer API
@@ -683,7 +683,7 @@ paths:
         - ""
       summary: Авторизація користувача
       tags:
-      - Користувач
+      - Авторизація/Реєстрація
   /auth/sign-up:
     post:
       consumes:
@@ -722,7 +722,7 @@ paths:
         - ""
       summary: Реєстрація нового користувача
       tags:
-      - Користувач
+      - Авторизація/Реєстрація
 security:
 - ApiKeyAuth: []
 securityDefinitions:

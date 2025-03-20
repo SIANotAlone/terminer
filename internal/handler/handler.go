@@ -42,6 +42,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		service := api.Group("/service")
 		{
 			service.POST("/create", h.CreateService)
+			service.POST("/create_promo", h.CreatePromoService)
 			service.POST("/update", h.UpdateService)
 			service.POST("/delete", h.DeleteService)
 			service.GET("/gettypes", h.GetTypes)
@@ -49,6 +50,10 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			service.GET("/getmyservices", h.GetMyServices)
 			service.GET("/available", h.GetAvailableServices)
 			service.POST("/availabletime", h.GetAvailableTime)
+			service.POST("/validate_promo", h.ValidatePromoCode)
+			service.POST("/activate_promo", h.ActivatePromoCode)
+			service.GET("/getmyactualservices", h.GetMyActualServices)
+			service.POST("/getmyhistory", h.GetMyHistory)
 
 		}
 		record := api.Group("/record")

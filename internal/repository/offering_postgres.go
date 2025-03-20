@@ -154,7 +154,7 @@ left join main.service s on s.uuid = dc.service_id
 left join main.user uu on s.performer_id = uu.uuid
 left join main.service_type st on s.service_type_id = st.id
 
-where dc.user_id = $1 and date_end > CURRENT_DATE 
+where dc.user_id = $1 and date_end < CURRENT_DATE 
 union 
 select s.uuid as id, s.name as service, s.description, u.first_name as p1,
 u.last_name as p2, u.email as p3, s.date, s.date_end, st.name as service_type
@@ -205,6 +205,53 @@ func (r *OfferingPostgres) GetAvailableTime(service_id uuid.UUID) ([]models.Serv
 	return available_times, nil
 }
 
+func (r *OfferingPostgres) CreatePromoService(offering models.NewPromoService) (uuid.UUID, error) {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return uuid.Nil, err
+	}
+	var id uuid.UUID
+	tx.Exec(`CREATE OR REPLACE FUNCTION generate_promo_code(length INT DEFAULT 8) RETURNS TEXT AS $$
+DECLARE
+    chars TEXT := 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    result TEXT := '';
+    i INT;
+BEGIN
+    FOR i IN 1..length LOOP
+        result := result || substr(chars, floor(random() * length(chars) + 1)::INT, 1);
+    END LOOP;
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql;`)
+	create_service_query := fmt.Sprintf(`INSERT INTO %s (name, description, date, date_end, service_type_id, performer_id,  promocode) VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, generate_promo_code(10)) RETURNING uuid`, servicesTable)
+	row := tx.QueryRow(create_service_query, offering.PromoService.Name, offering.PromoService.Description, offering.PromoService.DateEnd, offering.PromoService.ServiceType, offering.PromoService.PerformerID)
+	if err := row.Scan(&id); err != nil {
+		tx.Rollback()
+		return id, err
+	}
+
+	for _, value := range offering.Available_time {
+		create_available_time_query := fmt.Sprintf("INSERT INTO %s (service_id, time_start, time_end) VALUES ($1, $2, $3)", available_timeTable)
+		time_start, err := time.Parse(time_layout, value.TimeStart)
+		if err != nil {
+			tx.Rollback()
+			return uuid.Nil, err
+		}
+		time_end, err := time.Parse(time_layout, value.TimeEnd)
+		if err != nil {
+			tx.Rollback()
+			return uuid.Nil, err
+		}
+		_, err = tx.Exec(create_available_time_query, id, time_start.Format(time_layout), time_end.Format(time_layout))
+		if err != nil {
+			tx.Rollback()
+			return uuid.Nil, err
+		}
+	}
+
+	return id, tx.Commit()
+}
+
 func (r *OfferingPostgres) GetUserTelegramID(user_id uuid.UUID) (string, error) {
 	query := fmt.Sprintf("select telegram_chat_id from %s where uuid = $1", usersTable)
 	row := r.db.QueryRow(query, user_id)
@@ -231,4 +278,123 @@ func (r *OfferingPostgres) GetAllUsersTelegramID() ([]string, error) {
 		telegram_ids = append(telegram_ids, telegram_id)
 	}
 	return telegram_ids, nil
+}
+
+func (r *OfferingPostgres) GetPromoCodeInfo(code string) (models.PromocodeInfo, error) {
+	query := `select dc.uuid, dc.date, dc.date_end, dc.name, dc.description, max(u.last_name||' '||u.first_name) as performer, dc.promocode, count(f) as available_for
+from main.service dc 
+left join main.available_for f on f.service_id = dc.uuid
+left join main.user u on u.uuid = dc.performer_id
+where dc.promocode = $1 
+group by 1`
+
+	var info models.PromocodeInfo
+	row := r.db.QueryRow(query, code)
+	if err := row.Scan(&info.Service_ID, &info.Date, &info.Date_end, &info.Name, &info.Description, &info.Performer, &info.Promocode, &info.Available_for); err != nil {
+		return info, err
+	}
+	return info, nil
+
+}
+
+func (r *OfferingPostgres) ActivatePromoCode(service_id uuid.UUID, user_id uuid.UUID) error {
+	query := `insert into main.available_for(service_id, user_id) values ($1, $2)`
+
+	_, err := r.db.Exec(query, service_id, user_id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *OfferingPostgres) GetMyActualServices(user_id uuid.UUID) ([]models.MyActualService, error) {
+	query := `SELECT 
+    dc.uuid, 
+    dc.name, 
+    dc.description,
+	st.name as service_type,
+	dc.date, 
+	dc.date_end,
+	u.last_name || ' ' || u.first_name as performer,
+    COALESCE(t.count_all, 0) AS count_all, 
+    COALESCE(tt.count_free, 0) AS count_available --Доступні часи запису на послугу
+FROM main.service dc
+LEFT JOIN (
+    SELECT service_id, COUNT(*) AS count_all 
+    FROM main.available_time 
+    GROUP BY service_id
+) t ON t.service_id = dc.uuid
+LEFT JOIN (
+    SELECT service_id, COUNT(*) AS count_free 
+    FROM main.available_time 
+    WHERE booked = false
+    GROUP BY service_id
+) tt ON tt.service_id = dc.uuid
+left join main.user u on u.uuid = dc.performer_id
+left join main.service_type st on st.id =dc.service_type_id
+WHERE dc.performer_id = $1 
+ and COALESCE(tt.count_free, 0)>0 and dc.date_end < CURRENT_DATE
+
+`
+
+	var services []models.MyActualService
+	row, err := r.db.Query(query, user_id)
+	if err != nil {
+		return nil, err
+	}
+	for row.Next() {
+		var service models.MyActualService
+		if err := row.Scan(&service.ID, &service.Name, &service.Description, &service.ServiceType, &service.Date, &service.DateEnd, &service.Performer, &service.TotalSlots, &service.AvailableSlots); err != nil {
+			return nil, err
+		}
+		services = append(services, service)
+	}
+	return services, nil
+}
+
+func (r *OfferingPostgres) GetHistoryMyServices(user_id uuid.UUID, limit int64, offset int64) ([]models.MyActualService, error) {
+	query := `SELECT 
+    dc.uuid, 
+    dc.name, 
+    dc.description,
+	st.name as service_type,
+	dc.date, 
+	dc.date_end,
+	u.last_name || ' ' || u.first_name as performer,
+    COALESCE(t.count_all, 0) AS count_all, 
+    COALESCE(tt.count_free, 0) AS count_available --Доступні часи запису на послугу
+FROM main.service dc
+
+LEFT JOIN (
+    SELECT service_id, COUNT(*) AS count_all 
+    FROM main.available_time 
+    GROUP BY service_id
+) t ON t.service_id = dc.uuid
+LEFT JOIN (
+    SELECT service_id, COUNT(*) AS count_free 
+    FROM main.available_time 
+    WHERE booked = false
+    GROUP BY service_id
+) tt ON tt.service_id = dc.uuid
+left join main.user u on u.uuid = dc.performer_id
+left join main.service_type st on st.id =dc.service_type_id
+WHERE dc.performer_id = $1 
+ LIMIT $2 OFFSET $3
+
+`
+
+	var services []models.MyActualService
+	row, err := r.db.Query(query, user_id, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	for row.Next() {
+		var service models.MyActualService
+		if err := row.Scan(&service.ID, &service.Name, &service.Description, &service.ServiceType, &service.Date, &service.DateEnd, &service.Performer, &service.TotalSlots, &service.AvailableSlots); err != nil {
+			return nil, err
+		}
+		services = append(services, service)
+	}
+	return services, nil
+
 }

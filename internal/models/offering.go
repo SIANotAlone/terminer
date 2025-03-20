@@ -34,6 +34,19 @@ type NewService struct {
 	Available_time []Available_time `json:"available_time"`
 	Available_for  []Available_for  `json:"available_for"`
 }
+type PromoService struct {
+	UUID        uuid.UUID `json:"-"`
+	Name        string    `json:"name" binding:"required" omitempty:"true"`
+	Description string    `json:"description" binding:"required" omitempty:"true"`
+	Date        time.Time `json:"-"`
+	DateEnd     time.Time `json:"date_end" binding:"required" omitempty:"true"`
+	ServiceType int       `json:"service_type" binding:"required" omitempty:"true"`
+	PerformerID uuid.UUID `json:"-"`
+}
+type NewPromoService struct {
+	PromoService   PromoService     `json:"promoservice" binding:"required" omitempty:"true"`
+	Available_time []Available_time `json:"available_time"`
+}
 
 type ServiceUpdate struct {
 	UUID        uuid.UUID `json:"id" binding:"required" omitempty:"true"`
@@ -82,4 +95,50 @@ type ServiceAvailableTime struct {
 
 type ServiceAvailableTimeInput struct {
 	ID uuid.UUID `json:"service_id" binding:"required" omitempty:"true"`
+}
+
+type PromocodeInfo struct {
+	Service_ID    uuid.UUID `json:"service_id"`
+	Date          time.Time `json:"date"`
+	Date_end      time.Time `json:"date_end"`
+	Name          string    `json:"name"`
+	Description   string    `json:"description"`
+	Performer     string    `json:"performer"`
+	Promocode     string    `json:"-"`
+	Available_for int64     `json:"-"`
+}
+
+type PromocodeValidation struct {
+	Valid        bool          `json:"valid"`
+	PromeService PromocodeInfo `json:"promoservice"`
+}
+
+type PromocodeValidationInput struct {
+	Promocode string `json:"promocode" binding:"required" omitempty:"true"`
+}
+
+type PromocodeActivation struct {
+	Promocode string    `json:"promocode" binding:"required" omitempty:"true"`
+	User_ID   uuid.UUID `json:"-"`
+}
+
+type PromocodeActivationInput struct {
+	Promocode string `json:"promocode" binding:"required" omitempty:"true"`
+}
+
+type MyActualService struct {
+	ID             uuid.UUID `json:"id"`
+	Name           string    `json:"name"`
+	Description    string    `json:"description"`
+	ServiceType    string    `json:"service_type"`
+	Date           time.Time `json:"date"`
+	DateEnd        time.Time `json:"date_end"`
+	Performer      string    `json:"performer"`
+	TotalSlots     int64     `json:"total_slots"`
+	AvailableSlots int64     `json:"available_slots"`
+}
+
+type MyHistoryServiceInput struct {
+	Limit  int64 `json:"limit" omitempty:"true"`
+	Offset int64 `json:"offset" omitempty:"true"`
 }
