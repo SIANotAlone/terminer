@@ -22,7 +22,7 @@ import (
 // @description Terminer API
 // @Security ApiKeyAuth
 
-// @host 192.168.2.105:9999
+// @host 192.168.2.123:9999
 // @BasePath /
 
 // @securityDefinitions.apikey ApiKeyAuth

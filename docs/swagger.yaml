@@ -28,6 +28,24 @@ definitions:
     required:
     - id
     type: object
+  models.MyHistoryServiceInput:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+    type: object
+  models.NewPromoService:
+    properties:
+      available_time:
+        items:
+          $ref: '#/definitions/models.Available_time'
+        type: array
+      promoservice:
+        $ref: '#/definitions/models.PromoService'
+    required:
+    - promoservice
+    type: object
   models.NewRecord:
     properties:
       available_time_id:
@@ -52,6 +70,58 @@ definitions:
         $ref: '#/definitions/models.Service'
     required:
     - service
+    type: object
+  models.PromoService:
+    properties:
+      date_end:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      service_type:
+        type: integer
+    required:
+    - date_end
+    - description
+    - name
+    - service_type
+    type: object
+  models.PromocodeActivationInput:
+    properties:
+      promocode:
+        type: string
+    required:
+    - promocode
+    type: object
+  models.PromocodeInfo:
+    properties:
+      date:
+        type: string
+      date_end:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      performer:
+        type: string
+      service_id:
+        type: string
+    type: object
+  models.PromocodeValidation:
+    properties:
+      promoservice:
+        $ref: '#/definitions/models.PromocodeInfo'
+      valid:
+        type: boolean
+    type: object
+  models.PromocodeValidationInput:
+    properties:
+      promocode:
+        type: string
+    required:
+    - promocode
     type: object
   models.Service:
     properties:
@@ -186,7 +256,7 @@ definitions:
     - email
     - password
     type: object
-host: 192.168.2.105:9999
+host: 192.168.2.123:9999
 info:
   contact: {}
   description: Terminer API
@@ -723,6 +793,173 @@ paths:
       summary: Реєстрація нового користувача
       tags:
       - Авторизація/Реєстрація
+  /promo-service/create:
+    post:
+      consumes:
+      - application/json
+      description: Додає нову промо-послугу для авторизованого користувача.
+      parameters:
+      - description: Дані для створення нової промо-послуги
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewPromoService'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успішна відповідь з ID нової промо-послуги
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Некоректні вхідні дані
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Внутрішня помилка сервера
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Створення нової промо-послуги
+      tags:
+      - promocodes
+  /promocode/activate:
+    post:
+      consumes:
+      - application/json
+      description: Перевіряє та активує промокод для авторизованого користувача.
+      parameters:
+      - description: Дані для активації промокоду
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.PromocodeActivationInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успішна відповідь з повідомленням
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Некоректні вхідні дані
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Внутрішня помилка сервера
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Активує промокод
+      tags:
+      - promocodes
+  /promocode/validate:
+    post:
+      consumes:
+      - application/json
+      description: Перевіряє введений промокод для авторизованого користувача.
+      parameters:
+      - description: Дані для перевірки промокоду
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.PromocodeValidationInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Результат перевірки промокоду
+          schema:
+            $ref: '#/definitions/models.PromocodeValidation'
+        "400":
+          description: Некоректні вхідні дані
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Внутрішня помилка сервера
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Перевірка валідності промокоду
+      tags:
+      - promocodes
+  /services/actual:
+    get:
+      consumes:
+      - application/json
+      description: Повертає список актуальних послуг для авторизованого користувача.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список актуальних послуг
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "500":
+          description: Внутрішня помилка сервера
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Отримання актуальних послуг користувача
+      tags:
+      - services
+  /services/history:
+    post:
+      consumes:
+      - application/json
+      description: Повертає історію послуг для авторизованого користувача з підтримкою
+        пагінації.
+      parameters:
+      - description: Дані для пагінації історії послуг
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.MyHistoryServiceInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список історії послуг
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "400":
+          description: Некоректні вхідні дані
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Внутрішня помилка сервера
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Отримання історії послуг користувача
+      tags:
+      - services
 security:
 - ApiKeyAuth: []
 securityDefinitions:

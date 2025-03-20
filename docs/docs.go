@@ -844,6 +844,263 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/promo-service/create": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Додає нову промо-послугу для авторизованого користувача.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "promocodes"
+                ],
+                "summary": "Створення нової промо-послуги",
+                "parameters": [
+                    {
+                        "description": "Дані для створення нової промо-послуги",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.NewPromoService"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успішна відповідь з ID нової промо-послуги",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Некоректні вхідні дані",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Внутрішня помилка сервера",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/promocode/activate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Перевіряє та активує промокод для авторизованого користувача.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "promocodes"
+                ],
+                "summary": "Активує промокод",
+                "parameters": [
+                    {
+                        "description": "Дані для активації промокоду",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.PromocodeActivationInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успішна відповідь з повідомленням",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Некоректні вхідні дані",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Внутрішня помилка сервера",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/promocode/validate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Перевіряє введений промокод для авторизованого користувача.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "promocodes"
+                ],
+                "summary": "Перевірка валідності промокоду",
+                "parameters": [
+                    {
+                        "description": "Дані для перевірки промокоду",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.PromocodeValidationInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Результат перевірки промокоду",
+                        "schema": {
+                            "$ref": "#/definitions/models.PromocodeValidation"
+                        }
+                    },
+                    "400": {
+                        "description": "Некоректні вхідні дані",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Внутрішня помилка сервера",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/services/actual": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Повертає список актуальних послуг для авторизованого користувача.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "services"
+                ],
+                "summary": "Отримання актуальних послуг користувача",
+                "responses": {
+                    "200": {
+                        "description": "Список актуальних послуг",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутрішня помилка сервера",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/services/history": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Повертає історію послуг для авторизованого користувача з підтримкою пагінації.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "services"
+                ],
+                "summary": "Отримання історії послуг користувача",
+                "parameters": [
+                    {
+                        "description": "Дані для пагінації історії послуг",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.MyHistoryServiceInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список історії послуг",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Некоректні вхідні дані",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Внутрішня помилка сервера",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -890,6 +1147,34 @@ const docTemplate = `{
                 }
             }
         },
+        "models.MyHistoryServiceInput": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.NewPromoService": {
+            "type": "object",
+            "required": [
+                "promoservice"
+            ],
+            "properties": {
+                "available_time": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Available_time"
+                    }
+                },
+                "promoservice": {
+                    "$ref": "#/definitions/models.PromoService"
+                }
+            }
+        },
         "models.NewRecord": {
             "type": "object",
             "required": [
@@ -925,6 +1210,85 @@ const docTemplate = `{
                 },
                 "service": {
                     "$ref": "#/definitions/models.Service"
+                }
+            }
+        },
+        "models.PromoService": {
+            "type": "object",
+            "required": [
+                "date_end",
+                "description",
+                "name",
+                "service_type"
+            ],
+            "properties": {
+                "date_end": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "service_type": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.PromocodeActivationInput": {
+            "type": "object",
+            "required": [
+                "promocode"
+            ],
+            "properties": {
+                "promocode": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.PromocodeInfo": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "date_end": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "performer": {
+                    "type": "string"
+                },
+                "service_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.PromocodeValidation": {
+            "type": "object",
+            "properties": {
+                "promoservice": {
+                    "$ref": "#/definitions/models.PromocodeInfo"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.PromocodeValidationInput": {
+            "type": "object",
+            "required": [
+                "promocode"
+            ],
+            "properties": {
+                "promocode": {
+                    "type": "string"
                 }
             }
         },
@@ -1144,7 +1508,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "192.168.2.105:9999",
+	Host:             "192.168.2.123:9999",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "",
