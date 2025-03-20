@@ -182,6 +182,75 @@
                 }
             }
         },
+        "/api/service/activate_promo": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Хендлер для активації промокоду. Приймає промокод та активує його для поточного користувача.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Промокод"
+                ],
+                "summary": "Активація промокоду",
+                "parameters": [
+                    {
+                        "description": "Дані для активації промокоду",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.PromocodeActivationInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Повідомлення про успішну активацію",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Помилка запиту",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Користувач не авторизований",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Помилка сервера",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/service/available": {
             "get": {
                 "security": [
@@ -326,6 +395,64 @@
                 }
             }
         },
+        "/api/service/create_promo": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Хендлер для створення промо-послуги. Приймає структуру NewPromoService і повертає ідентифікатор нової послуги.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Промокод"
+                ],
+                "summary": "Створення промо-послуги",
+                "parameters": [
+                    {
+                        "description": "Дані для створення промо-послуги",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.NewPromoService"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ID створеної промо-послуги",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Помилка запиту",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Помилка сервера",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/service/createservicetype": {
             "post": {
                 "security": [
@@ -429,6 +556,124 @@
                     },
                     "400": {
                         "description": "Помилка запиту",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Помилка сервера",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/service/getmyactualservices": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Хендлер для отримання списку актуальних послуг, створених поточним користувачем.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Послуга"
+                ],
+                "summary": "Отримання актуальних послуг користувача",
+                "responses": {
+                    "200": {
+                        "description": "Список актуальних послуг",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Service"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Користувач не авторизований",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Помилка сервера",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/service/getmyhistory": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Хендлер для отримання історії послуг поточного користувача з пагінацією.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Послуга"
+                ],
+                "summary": "Отримання історії послуг користувача",
+                "parameters": [
+                    {
+                        "description": "Дані для отримання історії послуг",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.MyHistoryServiceInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список історичних послуг",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Service"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Помилка запиту",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Користувач не авторизований",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -570,6 +815,58 @@
                     },
                     "400": {
                         "description": "Помилка запиту",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/service/validate_promo": {
+            "post": {
+                "description": "Хендлер для перевірки дійсності промокоду. Приймає структуру PromocodeValidationInput і повертає результат перевірки.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Промокод"
+                ],
+                "summary": "Валідація промокоду",
+                "parameters": [
+                    {
+                        "description": "Дані для перевірки промокоду",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.PromocodeValidationInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Результат перевірки промокоду",
+                        "schema": {
+                            "$ref": "#/definitions/models.PromocodeValidation"
+                        }
+                    },
+                    "400": {
+                        "description": "Помилка запиту",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Помилка сервера",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -833,263 +1130,6 @@
                             "additionalProperties": {
                                 "type": "string"
                             }
-                        }
-                    }
-                }
-            }
-        },
-        "/promo-service/create": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Додає нову промо-послугу для авторизованого користувача.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "promocodes"
-                ],
-                "summary": "Створення нової промо-послуги",
-                "parameters": [
-                    {
-                        "description": "Дані для створення нової промо-послуги",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.NewPromoService"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Успішна відповідь з ID нової промо-послуги",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Некоректні вхідні дані",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Внутрішня помилка сервера",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/promocode/activate": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Перевіряє та активує промокод для авторизованого користувача.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "promocodes"
-                ],
-                "summary": "Активує промокод",
-                "parameters": [
-                    {
-                        "description": "Дані для активації промокоду",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.PromocodeActivationInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Успішна відповідь з повідомленням",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Некоректні вхідні дані",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Внутрішня помилка сервера",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/promocode/validate": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Перевіряє введений промокод для авторизованого користувача.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "promocodes"
-                ],
-                "summary": "Перевірка валідності промокоду",
-                "parameters": [
-                    {
-                        "description": "Дані для перевірки промокоду",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.PromocodeValidationInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Результат перевірки промокоду",
-                        "schema": {
-                            "$ref": "#/definitions/models.PromocodeValidation"
-                        }
-                    },
-                    "400": {
-                        "description": "Некоректні вхідні дані",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Внутрішня помилка сервера",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/services/actual": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Повертає список актуальних послуг для авторизованого користувача.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "services"
-                ],
-                "summary": "Отримання актуальних послуг користувача",
-                "responses": {
-                    "200": {
-                        "description": "Список актуальних послуг",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "additionalProperties": true
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Внутрішня помилка сервера",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/services/history": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Повертає історію послуг для авторизованого користувача з підтримкою пагінації.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "services"
-                ],
-                "summary": "Отримання історії послуг користувача",
-                "parameters": [
-                    {
-                        "description": "Дані для пагінації історії послуг",
-                        "name": "input",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.MyHistoryServiceInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Список історії послуг",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "additionalProperties": true
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Некоректні вхідні дані",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Внутрішня помилка сервера",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
                         }
                     }
                 }

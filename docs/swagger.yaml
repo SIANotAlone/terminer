@@ -378,6 +378,51 @@ paths:
       summary: Завершення запису
       tags:
       - Запис на послугу
+  /api/service/activate_promo:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для активації промокоду. Приймає промокод та активує його
+        для поточного користувача.
+      parameters:
+      - description: Дані для активації промокоду
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.PromocodeActivationInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Повідомлення про успішну активацію
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Помилка запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Користувач не авторизований
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Активація промокоду
+      tags:
+      - Промокод
   /api/service/available:
     get:
       description: Хендлер для отримання доступних послуг для користувача. Використовує
@@ -469,6 +514,44 @@ paths:
       summary: Створити послугу
       tags:
       - Послуга
+  /api/service/create_promo:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для створення промо-послуги. Приймає структуру NewPromoService
+        і повертає ідентифікатор нової послуги.
+      parameters:
+      - description: Дані для створення промо-послуги
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewPromoService'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ID створеної промо-послуги
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Помилка запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Створення промо-послуги
+      tags:
+      - Промокод
   /api/service/createservicetype:
     post:
       consumes:
@@ -544,6 +627,82 @@ paths:
       - BearerAuth: []
       - ApiKeyAuth: []
       summary: Видалення послуги
+      tags:
+      - Послуга
+  /api/service/getmyactualservices:
+    get:
+      consumes:
+      - application/json
+      description: Хендлер для отримання списку актуальних послуг, створених поточним
+        користувачем.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список актуальних послуг
+          schema:
+            items:
+              $ref: '#/definitions/models.Service'
+            type: array
+        "401":
+          description: Користувач не авторизований
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Отримання актуальних послуг користувача
+      tags:
+      - Послуга
+  /api/service/getmyhistory:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для отримання історії послуг поточного користувача з пагінацією.
+      parameters:
+      - description: Дані для отримання історії послуг
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.MyHistoryServiceInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список історичних послуг
+          schema:
+            items:
+              $ref: '#/definitions/models.Service'
+            type: array
+        "400":
+          description: Помилка запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Користувач не авторизований
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Отримання історії послуг користувача
       tags:
       - Послуга
   /api/service/getmyservices:
@@ -627,6 +786,41 @@ paths:
       summary: Оновлення послуги
       tags:
       - Послуга
+  /api/service/validate_promo:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для перевірки дійсності промокоду. Приймає структуру PromocodeValidationInput
+        і повертає результат перевірки.
+      parameters:
+      - description: Дані для перевірки промокоду
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.PromocodeValidationInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Результат перевірки промокоду
+          schema:
+            $ref: '#/definitions/models.PromocodeValidation'
+        "400":
+          description: Помилка запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Валідація промокоду
+      tags:
+      - Промокод
   /api/termin/getallperformertermins:
     get:
       description: Хендлер для отримання всіх термінів для виконавця, що належать
@@ -793,173 +987,6 @@ paths:
       summary: Реєстрація нового користувача
       tags:
       - Авторизація/Реєстрація
-  /promo-service/create:
-    post:
-      consumes:
-      - application/json
-      description: Додає нову промо-послугу для авторизованого користувача.
-      parameters:
-      - description: Дані для створення нової промо-послуги
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/models.NewPromoService'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Успішна відповідь з ID нової промо-послуги
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Некоректні вхідні дані
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Внутрішня помилка сервера
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Створення нової промо-послуги
-      tags:
-      - promocodes
-  /promocode/activate:
-    post:
-      consumes:
-      - application/json
-      description: Перевіряє та активує промокод для авторизованого користувача.
-      parameters:
-      - description: Дані для активації промокоду
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/models.PromocodeActivationInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Успішна відповідь з повідомленням
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Некоректні вхідні дані
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Внутрішня помилка сервера
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Активує промокод
-      tags:
-      - promocodes
-  /promocode/validate:
-    post:
-      consumes:
-      - application/json
-      description: Перевіряє введений промокод для авторизованого користувача.
-      parameters:
-      - description: Дані для перевірки промокоду
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/models.PromocodeValidationInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Результат перевірки промокоду
-          schema:
-            $ref: '#/definitions/models.PromocodeValidation'
-        "400":
-          description: Некоректні вхідні дані
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Внутрішня помилка сервера
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Перевірка валідності промокоду
-      tags:
-      - promocodes
-  /services/actual:
-    get:
-      consumes:
-      - application/json
-      description: Повертає список актуальних послуг для авторизованого користувача.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Список актуальних послуг
-          schema:
-            items:
-              additionalProperties: true
-              type: object
-            type: array
-        "500":
-          description: Внутрішня помилка сервера
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Отримання актуальних послуг користувача
-      tags:
-      - services
-  /services/history:
-    post:
-      consumes:
-      - application/json
-      description: Повертає історію послуг для авторизованого користувача з підтримкою
-        пагінації.
-      parameters:
-      - description: Дані для пагінації історії послуг
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/models.MyHistoryServiceInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Список історії послуг
-          schema:
-            items:
-              additionalProperties: true
-              type: object
-            type: array
-        "400":
-          description: Некоректні вхідні дані
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Внутрішня помилка сервера
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Отримання історії послуг користувача
-      tags:
-      - services
 security:
 - ApiKeyAuth: []
 securityDefinitions:

@@ -43,19 +43,17 @@ func (h *Handler) CreateService(c *gin.Context) {
 
 }
 
-// CreatePromoService створює нову промо-послугу.
-//
-// @Summary Створення нової промо-послуги
-// @Description Додає нову промо-послугу для авторизованого користувача.
-// @Tags promocodes
-// @Accept json
-// @Produce json
-// @Param input body models.NewPromoService true "Дані для створення нової промо-послуги"
-// @Success 200 {object} map[string]interface{} "Успішна відповідь з ID нової промо-послуги"
-// @Failure 400 {object} map[string]interface{} "Некоректні вхідні дані"
-// @Failure 500 {object} map[string]interface{} "Внутрішня помилка сервера"
-// @Router /promo-service/create [post]
-// @Security BearerAuth
+// @Summary      Створення промо-послуги
+// @Description  Хендлер для створення промо-послуги. Приймає структуру NewPromoService і повертає ідентифікатор нової послуги.
+// @Tags         Промокод
+// @Accept       json
+// @Produce      json
+// @Param        input  body     models.NewPromoService  true  "Дані для створення промо-послуги"
+// @Success      200    {object}  map[string]interface{}  "ID створеної промо-послуги"
+// @Failure      400    {object}  map[string]string  "Помилка запиту"
+// @Failure      500    {object}  map[string]string  "Помилка сервера"
+// @Security     BearerAuth
+// @Router       /api/service/create_promo [post]
 func (h *Handler) CreatePromoService(c *gin.Context) {
 	var input models.NewPromoService
 	userId, err := getUserId(c)
@@ -79,19 +77,16 @@ func (h *Handler) CreatePromoService(c *gin.Context) {
 	})
 }
 
-// ValidatePromoCode перевіряє валідність промокоду.
-//
-// @Summary Перевірка валідності промокоду
-// @Description Перевіряє введений промокод для авторизованого користувача.
-// @Tags promocodes
-// @Accept json
-// @Produce json
-// @Param input body models.PromocodeValidationInput true "Дані для перевірки промокоду"
-// @Success 200 {object} models.PromocodeValidation "Результат перевірки промокоду"
-// @Failure 400 {object} map[string]interface{} "Некоректні вхідні дані"
-// @Failure 500 {object} map[string]interface{} "Внутрішня помилка сервера"
-// @Router /promocode/validate [post]
-// @Security BearerAuth
+// @Summary      Валідація промокоду
+// @Description  Хендлер для перевірки дійсності промокоду. Приймає структуру PromocodeValidationInput і повертає результат перевірки.
+// @Tags         Промокод
+// @Accept       json
+// @Produce      json
+// @Param        input  body     models.PromocodeValidationInput  true  "Дані для перевірки промокоду"
+// @Success      200    {object}  models.PromocodeValidation  "Результат перевірки промокоду"
+// @Failure      400    {object}  map[string]string  "Помилка запиту"
+// @Failure      500    {object}  map[string]string  "Помилка сервера"
+// @Router       /api/service/validate_promo [post]
 func (h *Handler) ValidatePromoCode(c *gin.Context) {
 	var input models.PromocodeValidationInput
 	if err := c.BindJSON(&input); err != nil {
@@ -188,19 +183,18 @@ func (h *Handler) DeleteService(c *gin.Context) {
 
 }
 
-// ActivatePromoCode активує промокод для користувача.
-//
-// @Summary Активує промокод
-// @Description Перевіряє та активує промокод для авторизованого користувача.
-// @Tags promocodes
-// @Accept json
-// @Produce json
-// @Param input body models.PromocodeActivationInput true "Дані для активації промокоду"
-// @Success 200 {object} map[string]interface{} "Успішна відповідь з повідомленням"
-// @Failure 400 {object} map[string]interface{} "Некоректні вхідні дані"
-// @Failure 500 {object} map[string]interface{} "Внутрішня помилка сервера"
-// @Router /promocode/activate [post]
-// @Security BearerAuth
+// @Summary      Активація промокоду
+// @Description  Хендлер для активації промокоду. Приймає промокод та активує його для поточного користувача.
+// @Tags         Промокод
+// @Accept       json
+// @Produce      json
+// @Param        input  body     models.PromocodeActivationInput  true  "Дані для активації промокоду"
+// @Success      200    {object}  map[string]string  "Повідомлення про успішну активацію"
+// @Failure      400    {object}  map[string]string  "Помилка запиту"
+// @Failure      401    {object}  map[string]string  "Користувач не авторизований"
+// @Failure      500    {object}  map[string]string  "Помилка сервера"
+// @Security     BearerAuth
+// @Router       /api/service/activate_promo [post]
 func (h *Handler) ActivatePromoCode(c *gin.Context) {
 	var input models.PromocodeActivationInput
 	if err := c.BindJSON(&input); err != nil {
@@ -223,17 +217,16 @@ func (h *Handler) ActivatePromoCode(c *gin.Context) {
 	})
 }
 
-// GetMyActualServices отримує актуальні послуги користувача.
-//
-// @Summary Отримання актуальних послуг користувача
-// @Description Повертає список актуальних послуг для авторизованого користувача.
-// @Tags services
-// @Accept json
-// @Produce json
-// @Success 200 {array} map[string]interface{} "Список актуальних послуг"
-// @Failure 500 {object} map[string]interface{} "Внутрішня помилка сервера"
-// @Router /services/actual [get]
-// @Security BearerAuth
+// @Summary      Отримання актуальних послуг користувача
+// @Description  Хендлер для отримання списку актуальних послуг, створених поточним користувачем.
+// @Tags         Послуга
+// @Accept       json
+// @Produce      json
+// @Success      200    {array}   models.Service  "Список актуальних послуг"
+// @Failure      401    {object}  map[string]string  "Користувач не авторизований"
+// @Failure      500    {object}  map[string]string  "Помилка сервера"
+// @Security     BearerAuth
+// @Router       /api/service/getmyactualservices [get]
 func (h *Handler) GetMyActualServices(c *gin.Context) {
 
 	userId, err := getUserId(c)
@@ -250,23 +243,21 @@ func (h *Handler) GetMyActualServices(c *gin.Context) {
 	c.JSON(http.StatusOK, services)
 }
 
-// GetMyHistory отримує історію послуг користувача.
-//
-// @Summary Отримання історії послуг користувача
-// @Description Повертає історію послуг для авторизованого користувача з підтримкою пагінації.
-// @Tags services
-// @Accept json
-// @Produce json
-// @Param input body models.MyHistoryServiceInput true "Дані для пагінації історії послуг"
-// @Success 200 {array} map[string]interface{} "Список історії послуг"
-// @Failure 400 {object} map[string]interface{} "Некоректні вхідні дані"
-// @Failure 500 {object} map[string]interface{} "Внутрішня помилка сервера"
-// @Router /services/history [post]
-// @Security BearerAuth
+// @Summary      Отримання історії послуг користувача
+// @Description  Хендлер для отримання історії послуг поточного користувача з пагінацією.
+// @Tags         Послуга
+// @Accept       json
+// @Produce      json
+// @Param        input  body     models.MyHistoryServiceInput  true  "Дані для отримання історії послуг"
+// @Success      200    {array}   models.Service  "Список історичних послуг"
+// @Failure      400    {object}  map[string]string  "Помилка запиту"
+// @Failure      401    {object}  map[string]string  "Користувач не авторизований"
+// @Failure      500    {object}  map[string]string  "Помилка сервера"
+// @Security     BearerAuth
+// @Router       /api/service/getmyhistory [post]
 func (h *Handler) GetMyHistory(c *gin.Context) {
 	var input models.MyHistoryServiceInput
 	if err := c.BindJSON(&input); err != nil {
-		fmt.Println(input.Limit, input.Offset)
 		NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
