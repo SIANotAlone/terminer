@@ -47,12 +47,17 @@ func (s *OfferingService) CreateService(offering models.NewService) (uuid.UUID, 
 	return repo, nil
 }
 
-func (s *OfferingService) CreatePromoService(offering models.NewPromoService) (uuid.UUID, error) {
+func (s *OfferingService) CreatePromoService(offering models.NewPromoService) (models.PromocodeServiceInfo, error) {
 	repo, err := s.repo.CreatePromoService(offering)
 	if err != nil {
 		s.logger.Warn(err)
 	}
-	return repo, nil
+	id := repo
+	info, err := s.repo.GetServicePromocode(id)
+	if err != nil {
+		s.logger.Warn(err)
+	}
+	return info, nil
 }
 
 func (s OfferingService) ValidatePromoCode(code string) (models.PromocodeValidation, error) {

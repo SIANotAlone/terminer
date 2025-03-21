@@ -16,7 +16,7 @@ type Authorization interface {
 
 type Offering interface {
 	CreateService(offering models.NewService) (uuid.UUID, error)
-	CreatePromoService (offering models.NewPromoService) (uuid.UUID, error) 
+	CreatePromoService (offering models.NewPromoService) (models.PromocodeServiceInfo, error) 
 	UpdateService(models.ServiceUpdate) error
 	DeleteService(id uuid.UUID) error
 	GetTypes() ([]models.ServiceType, error)

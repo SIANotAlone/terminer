@@ -398,3 +398,17 @@ WHERE dc.performer_id = $1
 	return services, nil
 
 }
+
+func (r *OfferingPostgres) GetServicePromocode(service_id uuid.UUID) (models.PromocodeServiceInfo, error) {
+	query := `select dc.uuid, dc.name, dc.description, dc.date, dc.date_end, st.name as servicetype, dc.promocode 
+from main.service dc
+left join main.service_type st on st.id = dc.service_type_id where dc.uuid = $1`
+
+	var info models.PromocodeServiceInfo
+	row := r.db.QueryRow(query, service_id)
+	if err := row.Scan(&info.Service_id, &info.Name, &info.Description, &info.Date, &info.Date_end, &info.ServiceType, &info.Promocode); err != nil {
+		return models.PromocodeServiceInfo{}, err
+	}
+
+	return info, nil
+}

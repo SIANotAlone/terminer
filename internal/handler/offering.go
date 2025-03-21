@@ -67,13 +67,14 @@ func (h *Handler) CreatePromoService(c *gin.Context) {
 		return
 	}
 
-	id, err := h.services.Offering.CreatePromoService(input)
+	info, err := h.services.Offering.CreatePromoService(input)
 	if err != nil {
 		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
+
 	c.JSON(http.StatusOK, map[string]interface{}{
-		"id": id,
+		"service_info": info,
 	})
 }
 

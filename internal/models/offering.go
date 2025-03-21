@@ -142,3 +142,13 @@ type MyHistoryServiceInput struct {
 	Limit  int64 `json:"limit" omitempty:"true"`
 	Offset int64 `json:"offset" omitempty:"true"`
 }
+
+type PromocodeServiceInfo struct {
+	Service_id  uuid.UUID `json:"service_id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Date        time.Time `json:"date"`
+	Date_end    time.Time `json:"date_end"`
+	ServiceType string    `json:"service_type"`
+	Promocode   string    `json:"promocode"`
+}
