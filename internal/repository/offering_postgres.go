@@ -154,7 +154,7 @@ left join main.service s on s.uuid = dc.service_id
 left join main.user uu on s.performer_id = uu.uuid
 left join main.service_type st on s.service_type_id = st.id
 
-where dc.user_id = $1 and date_end < CURRENT_DATE 
+where dc.user_id = $1 and s.date_end >= CURRENT_DATE 
 union 
 select s.uuid as id, s.name as service, s.description, u.first_name as p1,
 u.last_name as p2, u.email as p3, s.date, s.date_end, st.name as service_type
