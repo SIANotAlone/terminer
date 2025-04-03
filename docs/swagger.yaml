@@ -1,0 +1,997 @@
+basePath: /
+definitions:
+  models.Available_for:
+    properties:
+      serviceID:
+        type: string
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  models.Available_time:
+    properties:
+      serviceID:
+        type: string
+      time_end:
+        type: string
+      time_start:
+        type: string
+    required:
+    - time_end
+    - time_start
+    type: object
+  models.DoneRecord:
+    properties:
+      id:
+        type: string
+    required:
+    - id
+    type: object
+  models.MyHistoryServiceInput:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+    type: object
+  models.NewPromoService:
+    properties:
+      available_time:
+        items:
+          $ref: '#/definitions/models.Available_time'
+        type: array
+      promoservice:
+        $ref: '#/definitions/models.PromoService'
+    required:
+    - promoservice
+    type: object
+  models.NewRecord:
+    properties:
+      available_time_id:
+        type: integer
+      service_id:
+        type: string
+    required:
+    - available_time_id
+    - service_id
+    type: object
+  models.NewService:
+    properties:
+      available_for:
+        items:
+          $ref: '#/definitions/models.Available_for'
+        type: array
+      available_time:
+        items:
+          $ref: '#/definitions/models.Available_time'
+        type: array
+      service:
+        $ref: '#/definitions/models.Service'
+    required:
+    - service
+    type: object
+  models.PromoService:
+    properties:
+      date_end:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      service_type:
+        type: integer
+    required:
+    - date_end
+    - description
+    - name
+    - service_type
+    type: object
+  models.PromocodeActivationInput:
+    properties:
+      promocode:
+        type: string
+    required:
+    - promocode
+    type: object
+  models.PromocodeInfo:
+    properties:
+      date:
+        type: string
+      date_end:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      performer:
+        type: string
+      service_id:
+        type: string
+    type: object
+  models.PromocodeValidation:
+    properties:
+      promoservice:
+        $ref: '#/definitions/models.PromocodeInfo'
+      valid:
+        type: boolean
+    type: object
+  models.PromocodeValidationInput:
+    properties:
+      promocode:
+        type: string
+    required:
+    - promocode
+    type: object
+  models.Service:
+    properties:
+      date_end:
+        type: string
+      description:
+        type: string
+      for_all:
+        type: boolean
+      name:
+        type: string
+      service_type:
+        type: integer
+    required:
+    - date_end
+    - description
+    - name
+    - service_type
+    type: object
+  models.ServiceAvailableTimeInput:
+    properties:
+      service_id:
+        type: string
+    required:
+    - service_id
+    type: object
+  models.ServiceDelete:
+    properties:
+      id:
+        type: string
+    required:
+    - id
+    type: object
+  models.ServiceType:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.ServiceUpdate:
+    properties:
+      date_end:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      service_type:
+        type: integer
+    required:
+    - date_end
+    - description
+    - id
+    - name
+    - service_type
+    type: object
+  models.Termin:
+    properties:
+      date:
+        type: string
+      date_end:
+        type: string
+      description:
+        type: string
+      done:
+        type: boolean
+      performer:
+        type: string
+      record_id:
+        type: string
+      record_time:
+        type: string
+      service:
+        type: string
+      time_end:
+        type: string
+      time_start:
+        type: string
+      type:
+        type: string
+      user_confirm:
+        type: boolean
+      user_record:
+        type: string
+    type: object
+  models.User:
+    properties:
+      country:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+    type: object
+  models.UserRegistration:
+    properties:
+      country:
+        type: string
+      date_of_birth:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+      telegram_chat_id:
+        type: string
+    required:
+    - date_of_birth
+    - email
+    - first_name
+    - last_name
+    - password
+    type: object
+  models.UserSignIn:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+host: 192.168.2.123:9999
+info:
+  contact: {}
+  description: Terminer API
+  version: "1.0"
+paths:
+  /api/record/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для підтвердження запису. Приймає ID запису та підтверджує
+        його для користувача.
+      parameters:
+      - description: Дані для підтвердження запису (ID запису)
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.DoneRecord'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Повідомлення про успішне підтвердження запису"  {"message":
+            "ok"}'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Невірні дані запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Підтвердження запису
+      tags:
+      - Запис на послугу
+  /api/record/create:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для створення нового запису. Приймає дані для запису та
+        ідентифікує користувача на основі токена.
+      parameters:
+      - description: Дані для створення нового запису
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewRecord'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Ідентифікатор створеного запису"  {"message": "ok", "record_id":
+            "your_record_id_here"}'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Невірні дані запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Створення нового запису
+      tags:
+      - Запис на послугу
+  /api/record/done:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для завершення запису. Приймає ID запису та позначає його
+        як завершений для користувача.
+      parameters:
+      - description: Дані для позначення запису як завершеного (ID запису)
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.DoneRecord'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Повідомлення про успішне завершення запису"  {"message": "ok"}'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Невірні дані запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Завершення запису
+      tags:
+      - Запис на послугу
+  /api/service/activate_promo:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для активації промокоду. Приймає промокод та активує його
+        для поточного користувача.
+      parameters:
+      - description: Дані для активації промокоду
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.PromocodeActivationInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Повідомлення про успішну активацію
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Помилка запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Користувач не авторизований
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Активація промокоду
+      tags:
+      - Промокод
+  /api/service/available:
+    get:
+      description: Хендлер для отримання доступних послуг для користувача. Використовує
+        авторизацію для визначення користувача.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список доступних послуг
+          schema:
+            items:
+              $ref: '#/definitions/models.Service'
+            type: array
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Отримання доступних послуг
+      tags:
+      - Послуга
+  /api/service/availabletime:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для отримання доступного часу для конкретної послуги. Приймає
+        структуру з ID послуги в тілі запиту.
+      parameters:
+      - description: Дані для отримання доступного часу послуги
+        in: body
+        name: serviceID
+        required: true
+        schema:
+          $ref: '#/definitions/models.ServiceAvailableTimeInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список доступного часу для послуги
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "400":
+          description: Помилка запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Отримання доступного часу для послуги
+      tags:
+      - Послуга
+  /api/service/create:
+    post:
+      consumes:
+      - application/json
+      description: Тут створюється нова послуга
+      parameters:
+      - description: Данные для создания услуги
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewService'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Створити послугу
+      tags:
+      - Послуга
+  /api/service/create_promo:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для створення промо-послуги. Приймає структуру NewPromoService
+        і повертає ідентифікатор нової послуги.
+      parameters:
+      - description: Дані для створення промо-послуги
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewPromoService'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ID створеної промо-послуги
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Помилка запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Створення промо-послуги
+      tags:
+      - Промокод
+  /api/service/createservicetype:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для створення нового типу послуги. Приймає структуру ServiceType.
+      parameters:
+      - description: Дані для створення типу послуги
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.ServiceType'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Повідомлення про успішне створення типу послуги
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Помилка запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Створення типу послуги
+      tags:
+      - Послуга
+  /api/service/delete:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для видалення послуги. Приймає структуру ServiceDelete.
+        Перевіряє, чи користувач є адміністратором або власником послуги.
+      parameters:
+      - description: Дані для видалення послуги
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.ServiceDelete'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Повідомлення про успішне видалення або помилку
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Помилка запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Видалення послуги
+      tags:
+      - Послуга
+  /api/service/getmyactualservices:
+    get:
+      consumes:
+      - application/json
+      description: Хендлер для отримання списку актуальних послуг, створених поточним
+        користувачем.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список актуальних послуг
+          schema:
+            items:
+              $ref: '#/definitions/models.Service'
+            type: array
+        "401":
+          description: Користувач не авторизований
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Отримання актуальних послуг користувача
+      tags:
+      - Послуга
+  /api/service/getmyhistory:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для отримання історії послуг поточного користувача з пагінацією.
+      parameters:
+      - description: Дані для отримання історії послуг
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.MyHistoryServiceInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список історичних послуг
+          schema:
+            items:
+              $ref: '#/definitions/models.Service'
+            type: array
+        "400":
+          description: Помилка запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Користувач не авторизований
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Отримання історії послуг користувача
+      tags:
+      - Послуга
+  /api/service/getmyservices:
+    get:
+      description: Хендлер для отримання всіх послуг, що належать поточному користувачу.
+        Використовує авторизацію для визначення користувача.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список послуг користувача
+          schema:
+            items:
+              $ref: '#/definitions/models.Service'
+            type: array
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Отримання послуг користувача
+      tags:
+      - Послуга
+  /api/service/gettypes:
+    get:
+      description: Хендлер для отримання всіх типів послуг.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список типів послуг
+          schema:
+            items:
+              $ref: '#/definitions/models.ServiceType'
+            type: array
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Отримання типів послуг
+      tags:
+      - Послуга
+  /api/service/update:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для оновлення даних послуги. Приймає структуру ServiceUpdate.
+      parameters:
+      - description: Дані для оновлення послуги
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.ServiceUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Повідомлення про успішне оновлення
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Помилка запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Оновлення послуги
+      tags:
+      - Послуга
+  /api/service/validate_promo:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для перевірки дійсності промокоду. Приймає структуру PromocodeValidationInput
+        і повертає результат перевірки.
+      parameters:
+      - description: Дані для перевірки промокоду
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.PromocodeValidationInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Результат перевірки промокоду
+          schema:
+            $ref: '#/definitions/models.PromocodeValidation'
+        "400":
+          description: Помилка запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Валідація промокоду
+      tags:
+      - Промокод
+  /api/termin/getallperformertermins:
+    get:
+      description: Хендлер для отримання всіх термінів для виконавця, що належать
+        користувачу.
+      parameters:
+      - description: Ідентифікатор користувача
+        in: header
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список термінів для виконавця
+          schema:
+            items:
+              $ref: '#/definitions/models.Termin'
+            type: array
+        "400":
+          description: Невірні дані запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Отримання всіх термінів для виконавця
+      tags:
+      - Реакції
+  /api/termin/getallusertermins:
+    get:
+      description: Хендлер для отримання всіх термінів, що належать користувачу.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список термінів користувача
+          schema:
+            items:
+              $ref: '#/definitions/models.Termin'
+            type: array
+        "400":
+          description: Невірні дані запиту
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Отримання всіх термінів користувача
+      tags:
+      - Реакції
+  /api/user/getallusers:
+    get:
+      description: Хендлер для отримання списку всіх користувачів з бази даних.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список користувачів
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Отримання всіх користувачів
+      tags:
+      - Користувачі
+  /auth/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для авторизації користувача. Приймає email та пароль для
+        генерації токена.
+      parameters:
+      - description: Дані для авторизації користувача (email, пароль)
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserSignIn'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Токен доступу користувача"  {"token": "your_token_here"}'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Невірні дані авторизації
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - "":
+        - ""
+      summary: Авторизація користувача
+      tags:
+      - Авторизація/Реєстрація
+  /auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для реєстрації нового користувача. Приймає дані користувача
+        в форматі JSON та створює нового користувача.
+      parameters:
+      - description: Дані для реєстрації нового користувача
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserRegistration'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Ідентифікатор нового користувача" {"id": 1}'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Помилка запиту (неправильні дані)
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - "":
+        - ""
+      summary: Реєстрація нового користувача
+      tags:
+      - Авторизація/Реєстрація
+security:
+- ApiKeyAuth: []
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

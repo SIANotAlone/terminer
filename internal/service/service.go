@@ -16,6 +16,7 @@ type Authorization interface {
 
 type Offering interface {
 	CreateService(offering models.NewService) (uuid.UUID, error)
+	CreatePromoService (offering models.NewPromoService) (models.PromocodeServiceInfo, error) 
 	UpdateService(models.ServiceUpdate) error
 	DeleteService(id uuid.UUID) error
 	GetTypes() ([]models.ServiceType, error)
@@ -24,6 +25,11 @@ type Offering interface {
 	GetMyServices(user_id uuid.UUID) ([]models.MyService, error)
 	GetAvailableService(user_id uuid.UUID) ([]models.AvailableService, error)
 	GetAvailableTime(service_id uuid.UUID) ([]models.ServiceAvailableTime, error)
+	GetPromoCodeInfo(code string) (models.PromocodeInfo, error)
+	ValidatePromoCode(code string) (models.PromocodeValidation, error)
+	ActivatePromoCode(code string, user_id uuid.UUID) (error)
+	GetMyActualServices(user_id uuid.UUID) ([]models.MyActualService, error)
+	GetHistoryMyServices(user_id uuid.UUID, limit int64, offset int64) ([]models.MyActualService, error)
 
 	GetUserTelegramID(user_id uuid.UUID) (string, error)
 	GetAllUsersTelegramID() ([]string, error)
