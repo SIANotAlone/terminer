@@ -29,7 +29,7 @@ type Offering interface {
 	ValidatePromoCode(code string) (models.PromocodeValidation, error)
 	ActivatePromoCode(code string, user_id uuid.UUID) (error)
 	GetMyActualServices(user_id uuid.UUID) ([]models.MyActualService, error)
-	GetHistoryMyServices(user_id uuid.UUID, limit int64, offset int64) ([]models.MyActualService, error)
+	GetHistoryMyServices(user_id uuid.UUID, limit int64, offset int64) (models.UserServiceHistory, error)
 
 	GetUserTelegramID(user_id uuid.UUID) (string, error)
 	GetAllUsersTelegramID() ([]string, error)

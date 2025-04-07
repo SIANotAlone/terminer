@@ -398,6 +398,21 @@ WHERE dc.performer_id = $1
 	return services, nil
 
 }
+func(r *OfferingPostgres) GetTotalUserServices(user_id uuid.UUID) (int64, error){
+	query := `SELECT 
+    count(*)
+FROM main.service dc
+
+WHERE dc.performer_id = $1
+ `
+
+	var count int64
+	row := r.db.QueryRow(query, user_id)
+	if err := row.Scan(&count); err != nil {
+		return 0, err
+	}
+	return count, nil
+}
 
 func (r *OfferingPostgres) GetServicePromocode(service_id uuid.UUID) (models.PromocodeServiceInfo, error) {
 	query := `select dc.uuid, dc.name, dc.description, dc.date, dc.date_end, st.name as servicetype, dc.promocode 

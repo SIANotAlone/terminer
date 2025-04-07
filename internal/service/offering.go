@@ -88,8 +88,19 @@ func (s *OfferingService) GetMyActualServices(user_id uuid.UUID) ([]models.MyAct
 	return s.repo.GetMyActualServices(user_id)
 }
 
-func (s *OfferingService) GetHistoryMyServices(user_id uuid.UUID, limit int64, offset int64) ([]models.MyActualService, error) {
-	return s.repo.GetHistoryMyServices(user_id, limit, offset)
+func (s *OfferingService) GetHistoryMyServices(user_id uuid.UUID, limit int64, offset int64) (models.UserServiceHistory, error) {
+	var history models.UserServiceHistory
+	h, err:= s.repo.GetHistoryMyServices(user_id, limit, offset)
+	if err != nil {
+		s.logger.Warn(err)
+	}
+	history.History = h
+	t, err := s.repo.GetTotalUserServices(user_id)
+	if err != nil {
+		s.logger.Warn(err)
+	}
+	history.Total = t
+	return history, nil
 }
 
 func (s *OfferingService) GetPromoCodeInfo(code string) (models.PromocodeInfo, error) {
