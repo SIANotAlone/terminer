@@ -155,6 +155,9 @@ left join main.user uu on s.performer_id = uu.uuid
 left join main.service_type st on s.service_type_id = st.id
 
 where dc.user_id = $1 and s.date_end >= CURRENT_DATE 
+-- Фильтр по количеству доступных записей
+and  (select count(*) from main.record r where r.service_id = s.uuid) < (select count(*) from main.available_time a where a.service_id =s.uuid )
+
 union 
 select s.uuid as id, s.name as service, s.description, u.first_name as p1,
 u.last_name as p2, u.email as p3, s.date, s.date_end, st.name as service_type
@@ -398,7 +401,7 @@ WHERE dc.performer_id = $1
 	return services, nil
 
 }
-func(r *OfferingPostgres) GetTotalUserServices(user_id uuid.UUID) (int64, error){
+func (r *OfferingPostgres) GetTotalUserServices(user_id uuid.UUID) (int64, error) {
 	query := `SELECT 
     count(*)
 FROM main.service dc
