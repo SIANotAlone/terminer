@@ -123,20 +123,10 @@ func (r *OfferingPostgres) CreateServiceType(s models.ServiceType) error {
 }
 
 func (r *OfferingPostgres) GetMyServices(user_id uuid.UUID) ([]models.MyService, error) {
-	query := `select dc.uuid, dc.name, dc.description, dc.date, dc.date_end, st.name as service_type
-
-from main.service dc
+	query := `select dc.uuid, dc.name, dc.description, dc.date, dc.date_end, st.name as service_type from main.service dc
 	left join main.user u on dc.performer_id = u.uuid
 	left join main.service_type st on dc.service_type_id = st.id 
-	where dc.performer_id = '$1' 
-	and 
-	-- Загальна кількість термінів
-	(select count(*) from main.available_time where service_id = dc.uuid ) != 
-	-- Заброньовано термінів
-	(select count(*) from main.available_time where booked =true and service_id=dc.uuid )
-
-
-`
+	where dc.performer_id = $1 and date_end > CURRENT_DATE`
 	var myservices []models.MyService
 	row, err := r.db.Query(query, user_id)
 	if err != nil {
@@ -321,32 +311,17 @@ func (r *OfferingPostgres) ActivatePromoCode(service_id uuid.UUID, user_id uuid.
 }
 
 func (r *OfferingPostgres) GetMyActualServices(user_id uuid.UUID) ([]models.MyActualService, error) {
-	query := `SELECT 
-    dc.uuid, 
-    dc.name, 
-    dc.description,
-	st.name as service_type,
-	dc.date, 
-	dc.date_end,
-	u.last_name || ' ' || u.first_name as performer,
-    COALESCE(t.count_all, 0) AS count_all, 
-    COALESCE(tt.count_free, 0) AS count_available --Доступні часи запису на послугу
-FROM main.service dc
-LEFT JOIN (
-    SELECT service_id, COUNT(*) AS count_all 
-    FROM main.available_time 
-    GROUP BY service_id
-) t ON t.service_id = dc.uuid
-LEFT JOIN (
-    SELECT service_id, COUNT(*) AS count_free 
-    FROM main.available_time 
-    WHERE booked = false
-    GROUP BY service_id
-) tt ON tt.service_id = dc.uuid
-left join main.user u on u.uuid = dc.performer_id
-left join main.service_type st on st.id =dc.service_type_id
-WHERE dc.performer_id = $1 
- and COALESCE(tt.count_free, 0)>0 and dc.date_end < CURRENT_DATE
+	query := `select dc.uuid, dc.name, dc.description, st.name as service_type, dc.date, dc.date_end, u.last_name || ' ' || u.first_name as performer,
+(select count(*) from main.available_time where service_id = dc.uuid ), (select count(*) from main.available_time where booked =true and service_id=dc.uuid )
+from main.service dc
+	left join main.user u on dc.performer_id = u.uuid
+	left join main.service_type st on dc.service_type_id = st.id
+	where dc.performer_id = $1
+	and 
+	-- Загальна кількість термінів
+	(select count(*) from main.available_time where service_id = dc.uuid ) != 
+	-- Заброньовано термінів
+	(select count(*) from main.available_time where booked =true and service_id=dc.uuid )
 
 `
 
