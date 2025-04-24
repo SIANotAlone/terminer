@@ -28,6 +28,27 @@ definitions:
     required:
     - id
     type: object
+  models.MyActualService:
+    properties:
+      available_slots:
+        type: integer
+      date:
+        type: string
+      date_end:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      performer:
+        type: string
+      service_type:
+        type: string
+      total_slots:
+        type: integer
+    type: object
   models.MyHistoryServiceInput:
     properties:
       limit:
@@ -245,6 +266,15 @@ definitions:
     - first_name
     - last_name
     - password
+    type: object
+  models.UserServiceHistory:
+    properties:
+      history:
+        items:
+          $ref: '#/definitions/models.MyActualService'
+        type: array
+      total:
+        type: integer
     type: object
   models.UserSignIn:
     properties:
@@ -677,10 +707,10 @@ paths:
       - application/json
       responses:
         "200":
-          description: Список історичних послуг
+          description: Історія моїх послуг
           schema:
             items:
-              $ref: '#/definitions/models.Service'
+              $ref: '#/definitions/models.UserServiceHistory'
             type: array
         "400":
           description: Помилка запиту

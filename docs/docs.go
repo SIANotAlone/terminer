@@ -662,11 +662,11 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Список історичних послуг",
+                        "description": "Історія моїх послуг",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Service"
+                                "$ref": "#/definitions/models.UserServiceHistory"
                             }
                         }
                     },
@@ -1187,6 +1187,38 @@ const docTemplate = `{
                 }
             }
         },
+        "models.MyActualService": {
+            "type": "object",
+            "properties": {
+                "available_slots": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "date_end": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "performer": {
+                    "type": "string"
+                },
+                "service_type": {
+                    "type": "string"
+                },
+                "total_slots": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.MyHistoryServiceInput": {
             "type": "object",
             "properties": {
@@ -1512,6 +1544,20 @@ const docTemplate = `{
                 },
                 "telegram_chat_id": {
                     "type": "string"
+                }
+            }
+        },
+        "models.UserServiceHistory": {
+            "type": "object",
+            "properties": {
+                "history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.MyActualService"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

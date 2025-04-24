@@ -152,3 +152,8 @@ type PromocodeServiceInfo struct {
 	ServiceType string    `json:"service_type"`
 	Promocode   string    `json:"promocode"`
 }
+
+type UserServiceHistory struct {
+	History []MyActualService `json:"history"`
+	Total   int64             `json:"total"`
+}

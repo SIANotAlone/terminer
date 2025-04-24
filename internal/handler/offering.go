@@ -250,7 +250,7 @@ func (h *Handler) GetMyActualServices(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        input  body     models.MyHistoryServiceInput  true  "Дані для отримання історії послуг"
-// @Success      200    {array}   models.Service  "Список історичних послуг"
+// @Success      200    {array}   models.UserServiceHistory  "Історія моїх послуг"
 // @Failure      400    {object}  map[string]string  "Помилка запиту"
 // @Failure      401    {object}  map[string]string  "Користувач не авторизований"
 // @Failure      500    {object}  map[string]string  "Помилка сервера"

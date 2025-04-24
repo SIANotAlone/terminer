@@ -29,6 +29,7 @@ type Offering interface {
 	GetMyActualServices(user_id uuid.UUID) ([]models.MyActualService, error)
 	GetHistoryMyServices(user_id uuid.UUID, limit int64, offset int64) ([]models.MyActualService, error)
 	GetServicePromocode(service_id uuid.UUID) (models.PromocodeServiceInfo, error)
+	GetTotalUserServices(user_id uuid.UUID) (int64, error)
 
 	GetUserTelegramID(user_id uuid.UUID) (string, error)
 	GetAllUsersTelegramID() ([]string, error)
