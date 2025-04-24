@@ -123,10 +123,20 @@ func (r *OfferingPostgres) CreateServiceType(s models.ServiceType) error {
 }
 
 func (r *OfferingPostgres) GetMyServices(user_id uuid.UUID) ([]models.MyService, error) {
-	query := `select dc.uuid, dc.name, dc.description, dc.date, dc.date_end, st.name as service_type from main.service dc
+	query := `select dc.uuid, dc.name, dc.description, dc.date, dc.date_end, st.name as service_type
+
+from main.service dc
 	left join main.user u on dc.performer_id = u.uuid
 	left join main.service_type st on dc.service_type_id = st.id 
-	where dc.performer_id = $1 and date_end > CURRENT_DATE`
+	where dc.performer_id = '$1' 
+	and 
+	-- Загальна кількість термінів
+	(select count(*) from main.available_time where service_id = dc.uuid ) != 
+	-- Заброньовано термінів
+	(select count(*) from main.available_time where booked =true and service_id=dc.uuid )
+
+
+`
 	var myservices []models.MyService
 	row, err := r.db.Query(query, user_id)
 	if err != nil {
