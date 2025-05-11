@@ -151,3 +151,52 @@ where dc.uuid = $1`
 
 	return info, nil
 }
+
+func (r *RecordPostgres) CheckAvailableTime(available_time_id int, service_id uuid.UUID) (bool, error) {
+	query := `select booked from main.available_time where id =$1 and service_id = $2`
+
+	var booked bool
+	row := r.db.QueryRow(query, available_time_id, service_id)
+	if err := row.Scan(&booked); err != nil {
+		return false, err
+	}
+
+	return booked, nil
+}
+
+func (r *RecordPostgres) GetTerminsFromService(service_id uuid.UUID) (models.TerminsFromService, error) {
+	query := `-- Запит на отримання усіх термінів з відповідної послуги 
+		select dc.uuid, dc.date, u.last_name || ' ' || u.first_name as client, dc.done, dc.user_confirm, dc.available_time_id,
+		dc.time, dc.user_confirm_time, dc.done_time, a_t.time_start, a_t.time_end, a_t.booked,
+		s.name, s.description
+		from main.record dc
+		left join main.available_time a_t on a_t.id = dc.available_time_id
+		left join main.user u on u.uuid = dc.user_id
+		left join main.service s on s.uuid = dc.service_id
+		where dc.service_id = $1
+		`
+	var termins models.TerminsFromService
+	row := r.db.QueryRow(query, service_id)
+	if err := row.Scan(&termins.ID, &termins.Date, &termins.Client, &termins.Done, &termins.UserConfirm, &termins.AvailableTimeID, &termins.Time, &termins.UserConfirmTime, &termins.DoneTime, &termins.TimeStart, &termins.TimeEnd, &termins.Booked, &termins.Service, &termins.Description); err != nil {
+		fmt.Println(err)
+		return models.TerminsFromService{}, err
+	}
+
+	return termins, nil
+
+}
+
+func (r *RecordPostgres) GetServiceBookedInfo(service_id uuid.UUID) (models.ServiceBookedInfo, error) {
+	query := `select count(uuid) as termins, 
+		(select count(booked) from main.available_time where service_id=$1) as booked
+		from main.record
+		where service_id = $1`
+
+	var info models.ServiceBookedInfo
+	row := r.db.QueryRow(query, service_id)
+	if err := row.Scan(&info.Total, &info.Booked); err != nil {
+		return models.ServiceBookedInfo{}, err
+	}
+
+	return info, nil
+}

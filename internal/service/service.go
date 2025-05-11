@@ -45,12 +45,14 @@ type Record interface {
 	GetUserName(user_id uuid.UUID) (string, error)
 	GetServiceName(id uuid.UUID) (string, error)
 	GetServiceInfo(record_id uuid.UUID) (models.ServiceInfo, error)
+	GetTerminsFromService(service_id uuid.UUID) (models.TerminsFromServiceResponce, error)
 }
 
 type Comment interface {
 	CreateComment(comment models.Comment) (uuid.UUID, error)
 	UpdateComment(comment models.UpdateComment) error
 	DeleteComment(id uuid.UUID, user uuid.UUID) error
+	GetCommentsOnRecord(record_id uuid.UUID, user_id uuid.UUID) (models.CommentsList, error)
 }
 
 type Termin interface {
