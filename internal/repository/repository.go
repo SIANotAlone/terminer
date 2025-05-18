@@ -52,7 +52,7 @@ type Record interface {
 	GetServiceName(id uuid.UUID) (string, error)
 	GetServiceInfo(record_id uuid.UUID) (models.ServiceInfo, error)
 	CheckAvailableTime(available_time_id int, service_id uuid.UUID) (bool, error)
-	GetTerminsFromService(service_id uuid.UUID) (models.TerminsFromService, error) 
+	GetTerminsFromService(service_id uuid.UUID) ([]models.TerminsFromService, error)
 	GetServiceBookedInfo(service_id uuid.UUID) (models.ServiceBookedInfo, error)
 }
 

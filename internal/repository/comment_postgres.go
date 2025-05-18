@@ -32,7 +32,7 @@ func (r *CommentPostgres) CreateComment(comment models.Comment) (uuid.UUID, erro
 }
 
 func (r *CommentPostgres) UpdateComment(comment models.UpdateComment) error {
-	query := fmt.Sprintf(`UPDATE %s SET comment = $1, timechange=now() WHERE uuid = $2 and user_id = $3`, commentTable)
+	query := fmt.Sprintf(`UPDATE %s SET comment = $1, timestampchange=now() WHERE uuid = $2 and user_id = $3`, commentTable)
 	_, err := r.db.Exec(query, comment.Comment, comment.ID, comment.UserID)
 	if err != nil {
 		return err
@@ -51,7 +51,7 @@ func (r *CommentPostgres) DeleteComment(id uuid.UUID, user uuid.UUID) error {
 
 func (r *CommentPostgres) GetCommentsOnRecord(record_id uuid.UUID, user_id uuid.UUID) (models.CommentsList, error) {
 	var comments models.CommentsList
-	query := `select dc.uuid, u.first_name||' '||u.last_name as comment_owner, dc.comment, dc.time, dc.timechange,
+	query := `select dc.uuid, u.first_name||' '||u.last_name as comment_owner, dc.comment, dc.timestamp, dc.timestampchange,
 		-- **************************
 		-- чи є користувач власником коментаря
 		CASE 
@@ -80,4 +80,3 @@ func (r *CommentPostgres) GetCommentsOnRecord(record_id uuid.UUID, user_id uuid.
 
 	return comments, nil
 }
-

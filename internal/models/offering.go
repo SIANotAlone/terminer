@@ -127,15 +127,15 @@ type PromocodeActivationInput struct {
 }
 
 type MyActualService struct {
-	ID             uuid.UUID `json:"id"`
-	Name           string    `json:"name"`
-	Description    string    `json:"description"`
-	ServiceType    string    `json:"service_type"`
-	Date           time.Time `json:"date"`
-	DateEnd        time.Time `json:"date_end"`
-	Performer      string    `json:"performer"`
-	TotalSlots     int64     `json:"total_slots"`
-	AvailableSlots int64     `json:"available_slots"`
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	ServiceType string    `json:"service_type"`
+	Date        time.Time `json:"date"`
+	DateEnd     time.Time `json:"date_end"`
+	Performer   string    `json:"performer"`
+	TotalSlots  int64     `json:"total_slots"`
+	BookedSlots int64     `json:"booked_slots"`
 }
 
 type MyHistoryServiceInput struct {

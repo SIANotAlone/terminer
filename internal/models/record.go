@@ -41,9 +41,9 @@ type TerminsFromService struct {
 }
 
 type TerminsFromServiceResponce struct {
-	Termins TerminsFromService
-	Total   int64
-	Booked  int64
+	Termins []TerminsFromService `json:"termins"`
+	Total   int64                `json:"total"`
+	Booked  int64                `json:"booked"`
 }
 type ServiceBookedInfo struct {
 	Total  int64 `json:"total"`

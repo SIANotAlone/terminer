@@ -322,6 +322,7 @@ from main.service dc
 	(select count(*) from main.available_time where service_id = dc.uuid ) != 
 	-- Заброньовано термінів
 	(select count(*) from main.available_time where booked =true and service_id=dc.uuid )
+	ORDER BY dc.date desc
 
 `
 
@@ -332,7 +333,7 @@ from main.service dc
 	}
 	for row.Next() {
 		var service models.MyActualService
-		if err := row.Scan(&service.ID, &service.Name, &service.Description, &service.ServiceType, &service.Date, &service.DateEnd, &service.Performer, &service.TotalSlots, &service.AvailableSlots); err != nil {
+		if err := row.Scan(&service.ID, &service.Name, &service.Description, &service.ServiceType, &service.Date, &service.DateEnd, &service.Performer, &service.TotalSlots, &service.BookedSlots); err != nil {
 			return nil, err
 		}
 		services = append(services, service)
@@ -350,7 +351,7 @@ func (r *OfferingPostgres) GetHistoryMyServices(user_id uuid.UUID, limit int64, 
 	dc.date_end,
 	u.last_name || ' ' || u.first_name as performer,
     COALESCE(t.count_all, 0) AS count_all, 
-    COALESCE(tt.count_free, 0) AS count_available --Доступні часи запису на послугу
+    COALESCE(tt.booked, 0) AS booked --Заброньовані
 FROM main.service dc
 
 LEFT JOIN (
@@ -359,14 +360,15 @@ LEFT JOIN (
     GROUP BY service_id
 ) t ON t.service_id = dc.uuid
 LEFT JOIN (
-    SELECT service_id, COUNT(*) AS count_free 
+    SELECT service_id, COUNT(*) AS booked 
     FROM main.available_time 
-    WHERE booked = false
+    WHERE booked = true
     GROUP BY service_id
 ) tt ON tt.service_id = dc.uuid
 left join main.user u on u.uuid = dc.performer_id
 left join main.service_type st on st.id =dc.service_type_id
-WHERE dc.performer_id = $1 
+WHERE dc.performer_id = $1
+ORDER BY dc.date desc
  LIMIT $2 OFFSET $3
 
 `
@@ -378,7 +380,7 @@ WHERE dc.performer_id = $1
 	}
 	for row.Next() {
 		var service models.MyActualService
-		if err := row.Scan(&service.ID, &service.Name, &service.Description, &service.ServiceType, &service.Date, &service.DateEnd, &service.Performer, &service.TotalSlots, &service.AvailableSlots); err != nil {
+		if err := row.Scan(&service.ID, &service.Name, &service.Description, &service.ServiceType, &service.Date, &service.DateEnd, &service.Performer, &service.TotalSlots, &service.BookedSlots); err != nil {
 			return nil, err
 		}
 		services = append(services, service)

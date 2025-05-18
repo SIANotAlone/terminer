@@ -110,7 +110,7 @@ func (s *RecordService) GetServiceInfo(record_id uuid.UUID) (models.ServiceInfo,
 
 func (s *RecordService) GetTerminsFromService(service_id uuid.UUID) (models.TerminsFromServiceResponce, error) {
 	var responce models.TerminsFromServiceResponce
-	var termins models.TerminsFromService
+	var termins []models.TerminsFromService
 	termins, err := s.repo.GetTerminsFromService(service_id)
 	if err != nil {
 		return models.TerminsFromServiceResponce{}, err

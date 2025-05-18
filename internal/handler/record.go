@@ -123,4 +123,3 @@ func (h Handler) GetTerminsFromService(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, termins)
 }
-	
