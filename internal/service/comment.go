@@ -27,3 +27,7 @@ func (s *CommentService) UpdateComment(comment models.UpdateComment) error {
 func (s *CommentService) DeleteComment(id uuid.UUID, user uuid.UUID) error {
 	return s.repo.DeleteComment(id, user)
 }
+
+func (s *CommentService) GetCommentsOnRecord(record_id uuid.UUID, user_id uuid.UUID) (models.CommentsList, error) {
+	return s.repo.GetCommentsOnRecord(record_id, user_id)
+}

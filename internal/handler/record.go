@@ -109,3 +109,17 @@ func (h Handler) ConfirmRecord(c *gin.Context) {
 		"message": "ok",
 	})
 }
+
+func (h Handler) GetTerminsFromService(c *gin.Context) {
+	var input models.TerminsFromServiceInput
+	if err := c.BindJSON(&input); err != nil {
+		NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	termins, err := h.services.Record.GetTerminsFromService(input.ServiceID)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, termins)
+}

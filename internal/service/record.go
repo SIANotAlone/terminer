@@ -22,6 +22,14 @@ func NewRecordService(repo repository.Record, logger *logrus.Logger) *RecordServ
 
 func (s *RecordService) CreateRecord(record models.NewRecord) (uuid.UUID, error) {
 
+	var isBooked bool
+	isBooked, err := s.repo.CheckAvailableTime(record.AvailableTimeID, record.ServiceID)
+	if err != nil {
+		s.logger.Warn(err)
+	}
+	if isBooked == true {
+		return uuid.Nil, fmt.Errorf("time is not available")
+	}
 	repo, err := s.repo.CreateRecord(record)
 	if err != nil {
 		s.logger.Warn(err)
@@ -100,6 +108,24 @@ func (s *RecordService) GetServiceInfo(record_id uuid.UUID) (models.ServiceInfo,
 	return s.repo.GetServiceInfo(record_id)
 }
 
+func (s *RecordService) GetTerminsFromService(service_id uuid.UUID) (models.TerminsFromServiceResponce, error) {
+	var responce models.TerminsFromServiceResponce
+	var termins []models.TerminsFromService
+	termins, err := s.repo.GetTerminsFromService(service_id)
+	if err != nil {
+		return models.TerminsFromServiceResponce{}, err
+	}
+	responce.Termins = termins
+	var service_booked_info models.ServiceBookedInfo
+	service_booked_info, err = s.repo.GetServiceBookedInfo(service_id)
+	if err != nil {
+		return models.TerminsFromServiceResponce{}, err
+	}
+	responce.Booked = service_booked_info.Booked
+	responce.Total = service_booked_info.Total
+	return responce, nil
+
+}
 func escapeMarkdownV2(input string) string {
 	replacer := strings.NewReplacer(
 		".", "\\.",

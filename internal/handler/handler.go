@@ -61,6 +61,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			record.POST("/create", h.CreateRecord)
 			record.POST("/done", h.DoneRecord)
 			record.POST("/confirm", h.ConfirmRecord)
+			record.POST("/termins", h.GetTerminsFromService)
 		}
 
 		user := api.Group("/user")
@@ -72,6 +73,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			comment.POST("/create", h.CreateComment)
 			comment.POST("/update", h.UpdateComment)
 			comment.POST("/delete", h.DeleteComment)
+			comment.POST("/getcomments", h.GetCommentsOnRecord)
 
 		}
 		Termin := api.Group("/termin")

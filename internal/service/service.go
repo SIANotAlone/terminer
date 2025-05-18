@@ -16,7 +16,7 @@ type Authorization interface {
 
 type Offering interface {
 	CreateService(offering models.NewService) (uuid.UUID, error)
-	CreatePromoService (offering models.NewPromoService) (models.PromocodeServiceInfo, error) 
+	CreatePromoService(offering models.NewPromoService) (models.PromocodeServiceInfo, error)
 	UpdateService(models.ServiceUpdate) error
 	DeleteService(id uuid.UUID) error
 	GetTypes() ([]models.ServiceType, error)
@@ -27,7 +27,7 @@ type Offering interface {
 	GetAvailableTime(service_id uuid.UUID) ([]models.ServiceAvailableTime, error)
 	GetPromoCodeInfo(code string) (models.PromocodeInfo, error)
 	ValidatePromoCode(code string) (models.PromocodeValidation, error)
-	ActivatePromoCode(code string, user_id uuid.UUID) (error)
+	ActivatePromoCode(code string, user_id uuid.UUID) error
 	GetMyActualServices(user_id uuid.UUID) ([]models.MyActualService, error)
 	GetHistoryMyServices(user_id uuid.UUID, limit int64, offset int64) (models.UserServiceHistory, error)
 
@@ -45,12 +45,14 @@ type Record interface {
 	GetUserName(user_id uuid.UUID) (string, error)
 	GetServiceName(id uuid.UUID) (string, error)
 	GetServiceInfo(record_id uuid.UUID) (models.ServiceInfo, error)
+	GetTerminsFromService(service_id uuid.UUID) (models.TerminsFromServiceResponce, error)
 }
 
 type Comment interface {
 	CreateComment(comment models.Comment) (uuid.UUID, error)
 	UpdateComment(comment models.UpdateComment) error
 	DeleteComment(id uuid.UUID, user uuid.UUID) error
+	GetCommentsOnRecord(record_id uuid.UUID, user_id uuid.UUID) (models.CommentsList, error)
 }
 
 type Termin interface {

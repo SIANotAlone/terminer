@@ -73,3 +73,22 @@ func (h *Handler) DeleteComment(c *gin.Context) {
 		"message": "ok",
 	})
 }
+
+func (h *Handler) GetCommentsOnRecord(c *gin.Context) {
+	var input models.GetCommentsInput
+	if err := c.BindJSON(&input); err != nil {
+		NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	var user_id, err = getUserId(c)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	comments, err := h.services.Comment.GetCommentsOnRecord(input.RecordID, user_id)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, comments)
+}

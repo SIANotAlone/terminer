@@ -32,7 +32,7 @@ func (r *CommentPostgres) CreateComment(comment models.Comment) (uuid.UUID, erro
 }
 
 func (r *CommentPostgres) UpdateComment(comment models.UpdateComment) error {
-	query := fmt.Sprintf(`UPDATE %s SET comment = $1, timechange=now() WHERE uuid = $2 and user_id = $3`, commentTable)
+	query := fmt.Sprintf(`UPDATE %s SET comment = $1, timestampchange=now() WHERE uuid = $2 and user_id = $3`, commentTable)
 	_, err := r.db.Exec(query, comment.Comment, comment.ID, comment.UserID)
 	if err != nil {
 		return err
@@ -47,4 +47,36 @@ func (r *CommentPostgres) DeleteComment(id uuid.UUID, user uuid.UUID) error {
 		return err
 	}
 	return nil
+}
+
+func (r *CommentPostgres) GetCommentsOnRecord(record_id uuid.UUID, user_id uuid.UUID) (models.CommentsList, error) {
+	var comments models.CommentsList
+	query := `select dc.uuid, u.first_name||' '||u.last_name as comment_owner, dc.comment, dc.timestamp, dc.timestampchange,
+		-- **************************
+		-- чи є користувач власником коментаря
+		CASE 
+			WHEN dc.user_id = $1 THEN true
+			ELSE false
+			END as is_my_comment
+		-- **************************
+
+		from main.comment dc
+		left join main.user u on u.uuid = dc.user_id 
+
+		where dc.record_id=$2
+		`
+
+	row, err := r.db.Query(query, user_id, record_id)
+	if err != nil {
+		return comments, err
+	}
+	for row.Next() {
+		var comment models.CommentOnRecord
+		if err := row.Scan(&comment.ID, &comment.CommentOwner, &comment.Comment, &comment.Created, &comment.Updated, &comment.IsMyComment); err != nil {
+			return comments, err
+		}
+		comments.CommentsList = append(comments.CommentsList, comment)
+	}
+
+	return comments, nil
 }
