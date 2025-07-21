@@ -92,3 +92,17 @@ func (h *Handler) GetCommentsOnRecord(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, comments)
 }
+
+func (h *Handler) GetTerminsWithComments(c *gin.Context) {
+	var user_id, err = getUserId(c)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	termins, err := h.services.Comment.GetTerminsWithComments(user_id)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, termins)
+}

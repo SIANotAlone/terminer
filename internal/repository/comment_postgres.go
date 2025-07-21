@@ -80,3 +80,33 @@ func (r *CommentPostgres) GetCommentsOnRecord(record_id uuid.UUID, user_id uuid.
 
 	return comments, nil
 }
+
+func (r *CommentPostgres) GetTerminsWithComments(record_id uuid.UUID) ([]models.TerminsWithComments, error) {
+	var twc []models.TerminsWithComments // termins with comments
+	query := `SELECT r.uuid, max(s.name) as service_name, r.date, r.done, r.user_confirm, r.time, r.user_confirm_time, r.done_time
+	FROM main.comment dc
+	LEFT JOIN main.record r ON r.uuid = dc.record_id
+	LEFT JOIN main.service s ON s.uuid = r.service_id
+	WHERE 
+		s.performer_id = $1
+		OR r.user_id = $1
+	GROUP BY r.uuid
+	`
+
+	row, err := r.db.Query(query, record_id)
+	if err != nil {
+		return twc, err
+	}
+	for row.Next() {
+		var list models.TerminsWithComments
+		if err := row.Scan(&list.ID, &list.ServiceName, &list.Created, &list.Done, &list.UserConfirm, &list.Created_time, &list.User_confirm_time, &list.Done_time); err != nil {
+			return twc, err
+		}
+
+		twc = append(twc, list)
+	
+	}
+	
+
+	return twc, nil
+}

@@ -40,6 +40,7 @@ type Comment interface {
 	UpdateComment(comment models.UpdateComment) error
 	DeleteComment(id uuid.UUID, user uuid.UUID) error
 	GetCommentsOnRecord(record_id uuid.UUID, user_id uuid.UUID) (models.CommentsList, error)
+	GetTerminsWithComments(record_id uuid.UUID) ([]models.TerminsWithComments, error)
 }
 
 type Record interface {

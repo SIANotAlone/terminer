@@ -31,3 +31,7 @@ func (s *CommentService) DeleteComment(id uuid.UUID, user uuid.UUID) error {
 func (s *CommentService) GetCommentsOnRecord(record_id uuid.UUID, user_id uuid.UUID) (models.CommentsList, error) {
 	return s.repo.GetCommentsOnRecord(record_id, user_id)
 }
+
+func (s *CommentService) GetTerminsWithComments(record_id uuid.UUID) ([]models.TerminsWithComments, error) {
+	return s.repo.GetTerminsWithComments(record_id)
+}
