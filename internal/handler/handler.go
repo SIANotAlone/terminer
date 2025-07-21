@@ -74,6 +74,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			comment.POST("/update", h.UpdateComment)
 			comment.POST("/delete", h.DeleteComment)
 			comment.POST("/getcomments", h.GetCommentsOnRecord)
+			comment.GET("/getterminswithcomments", h.GetTerminsWithComments)
 
 		}
 		Termin := api.Group("/termin")
