@@ -91,6 +91,7 @@ func (r *CommentPostgres) GetTerminsWithComments(record_id uuid.UUID) ([]models.
 		s.performer_id = $1
 		OR r.user_id = $1
 	GROUP BY r.uuid
+	ORDER BY r.date DESC
 	`
 
 	row, err := r.db.Query(query, record_id)
@@ -104,9 +105,8 @@ func (r *CommentPostgres) GetTerminsWithComments(record_id uuid.UUID) ([]models.
 		}
 
 		twc = append(twc, list)
-	
+
 	}
-	
 
 	return twc, nil
 }
