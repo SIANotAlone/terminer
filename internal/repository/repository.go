@@ -30,6 +30,8 @@ type Offering interface {
 	GetHistoryMyServices(user_id uuid.UUID, limit int64, offset int64) ([]models.MyActualService, error)
 	GetServicePromocode(service_id uuid.UUID) (models.PromocodeServiceInfo, error)
 	GetTotalUserServices(user_id uuid.UUID) (int64, error)
+	GetPromoCodeServiceOwnerTelegramID(promocode string) (string, error)
+	GetUserName(user_id uuid.UUID) (string, error)
 
 	GetUserTelegramID(user_id uuid.UUID) (string, error)
 	GetAllUsersTelegramID() ([]string, error)
@@ -41,6 +43,7 @@ type Comment interface {
 	DeleteComment(id uuid.UUID, user uuid.UUID) error
 	GetCommentsOnRecord(record_id uuid.UUID, user_id uuid.UUID) (models.CommentsList, error)
 	GetTerminsWithComments(record_id uuid.UUID) ([]models.TerminsWithComments, error)
+	GetServiceAndOwnerInfo(record_id uuid.UUID) (models.ServiceAndOwnerInfo, error)
 }
 
 type Record interface {

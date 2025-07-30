@@ -64,6 +64,7 @@ func (r *CommentPostgres) GetCommentsOnRecord(record_id uuid.UUID, user_id uuid.
 		left join main.user u on u.uuid = dc.user_id 
 
 		where dc.record_id=$2
+		order by dc.timestamp asc
 		`
 
 	row, err := r.db.Query(query, user_id, record_id)
@@ -109,4 +110,25 @@ func (r *CommentPostgres) GetTerminsWithComments(record_id uuid.UUID) ([]models.
 	}
 
 	return twc, nil
+}
+
+func (r *CommentPostgres) GetServiceAndOwnerInfo(record_id uuid.UUID) (models.ServiceAndOwnerInfo, error) {
+	var service_and_owner_info models.ServiceAndOwnerInfo
+	query := `select s.uuid as service_id,  s.name as service_name, s.date as service_date,
+	dc.date as termin_date, u2.uuid as record_owner_id, u2.first_name || ' ' || u2.last_name as record_owner_name,
+	u2.telegram_chat_id as record_owner_tg,
+	performer_id, u.first_name || ' ' || u.last_name as performer_name, u.telegram_chat_id as performer_tg
+	from main.record dc
+	left join main.service s on s.uuid = dc.service_id
+	left join main.user u on u.uuid = s.performer_id
+	left join main.user u2 on u2.uuid = dc.user_id
+	where dc.uuid = $1`
+
+	row := r.db.QueryRow(query, record_id)
+	if err := row.Scan(&service_and_owner_info.ServiceID, &service_and_owner_info.ServiceName, &service_and_owner_info.ServiceDate,
+		&service_and_owner_info.TermineDate, &service_and_owner_info.RecordOwnerID, &service_and_owner_info.RecordOwnerName, &service_and_owner_info.RecordOwnerTG,
+		&service_and_owner_info.PerformerID, &service_and_owner_info.PerformerName, &service_and_owner_info.PerformerTG); err != nil {
+		return service_and_owner_info, err
+	}
+	return service_and_owner_info, nil
 }

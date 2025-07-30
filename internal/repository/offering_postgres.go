@@ -417,3 +417,30 @@ left join main.service_type st on st.id = dc.service_type_id where dc.uuid = $1`
 
 	return info, nil
 }
+
+func (r *OfferingPostgres) GetPromoCodeServiceOwnerTelegramID(promocode string) (string, error) {
+	query := `select u.telegram_chat_id from main.service dc 
+		left join main.user u on u.uuid = dc.performer_id
+		where dc.promocode = $1
+		`
+	var telegram_id string
+	row := r.db.QueryRow(query, promocode)
+	if err := row.Scan(&telegram_id); err != nil {
+		return "", err
+	}
+	return telegram_id, nil
+}
+
+
+func (r *OfferingPostgres) GetUserName(user_id uuid.UUID) (string, error) {
+	query := `select dc.first_name || ' ' || dc.last_name as name from main.user dc
+	where dc.uuid  = $1`
+
+	var name string
+	row := r.db.QueryRow(query, user_id)
+	if err := row.Scan(&name); err != nil {
+		return "", err
+	}
+
+	return name, nil
+}
