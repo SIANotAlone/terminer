@@ -81,6 +81,31 @@ func (s OfferingService) ActivatePromoCode(code string, user_id uuid.UUID) error
 	if err != nil {
 		return err
 	}
+	author_telegram_id, err := s.repo.GetPromoCodeServiceOwnerTelegramID(code)
+	if err != nil {
+		s.logger.Warn(err)
+	}
+	if author_telegram_id == "" {
+		s.logger.Warn("service owner telegram id is empty")
+		return s.repo.ActivatePromoCode(info.Service_ID, user_id)
+	}
+	service_info, err := s.repo.GetPromoCodeInfo(code)
+	if err != nil {
+		s.logger.Warn(err)
+	}
+
+	user_name, err := s.repo.GetUserName(user_id)
+	if err != nil {
+		s.logger.Warn(err)
+	}
+
+	message := fmt.Sprintf("Ваш промокод на послугу: \"*%s*\" \nбуло активовано користувачем __*%s*__", service_info.Name, user_name)
+	obs := observer.ConcreteObserver{}
+	subject := observer.ConcreteSubject{}
+	subject.Register(&obs)
+	s.notificate_one_user(&subject, message, author_telegram_id)
+	// TODO:
+	// У майбутньому скоріше за все необхідно буде додати очищення промокоду, бо вони можут співпадати
 	return s.repo.ActivatePromoCode(info.Service_ID, user_id)
 }
 
@@ -90,7 +115,7 @@ func (s *OfferingService) GetMyActualServices(user_id uuid.UUID) ([]models.MyAct
 
 func (s *OfferingService) GetHistoryMyServices(user_id uuid.UUID, limit int64, offset int64) (models.UserServiceHistory, error) {
 	var history models.UserServiceHistory
-	h, err:= s.repo.GetHistoryMyServices(user_id, limit, offset)
+	h, err := s.repo.GetHistoryMyServices(user_id, limit, offset)
 	if err != nil {
 		s.logger.Warn(err)
 	}
@@ -162,6 +187,9 @@ func (s *OfferingService) notificateAllUsers(subject *observer.ConcreteSubject, 
 			subject.Notify(user, message)
 		}
 	}
+}
+func (s *OfferingService) notificate_one_user(subject *observer.ConcreteSubject, message string, tg_id string) {
+	subject.Notify(tg_id, message)
 }
 
 func (s *OfferingService) notificate_available_for_users(subject *observer.ConcreteSubject, message string, users []models.Available_for) {

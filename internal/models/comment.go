@@ -49,3 +49,16 @@ type TerminsWithComments struct {
 	User_confirm_time time.Time `json:"user_confirm_time"`
 	Done_time         time.Time `json:"done_time"`
 }
+
+type ServiceAndOwnerInfo struct {
+	ServiceID       uuid.UUID
+	ServiceName     string
+	ServiceDate     time.Time
+	TermineDate     time.Time
+	RecordOwnerID   uuid.UUID
+	RecordOwnerName string
+	RecordOwnerTG   string
+	PerformerID     uuid.UUID
+	PerformerName   string
+	PerformerTG     string
+}
