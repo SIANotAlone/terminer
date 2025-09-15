@@ -28,9 +28,18 @@ definitions:
     required:
     - id
     type: object
+  models.MassageType:
+    properties:
+      casual_name:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   models.MyActualService:
     properties:
-      available_slots:
+      booked_slots:
         type: integer
       date:
         type: string
@@ -657,6 +666,30 @@ paths:
       - BearerAuth: []
       - ApiKeyAuth: []
       summary: Видалення послуги
+      tags:
+      - Послуга
+  /api/service/getmassagetypes:
+    get:
+      description: Хендлер для отримання списку всіх доступних типів масажу.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список типів масажу
+          schema:
+            items:
+              $ref: '#/definitions/models.MassageType'
+            type: array
+        "500":
+          description: Помилка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Отримання типів масажу
       tags:
       - Послуга
   /api/service/getmyactualservices:

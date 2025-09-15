@@ -582,6 +582,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/service/getmassagetypes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Хендлер для отримання списку всіх доступних типів масажу.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Послуга"
+                ],
+                "summary": "Отримання типів масажу",
+                "responses": {
+                    "200": {
+                        "description": "Список типів масажу",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.MassageType"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Помилка сервера",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/service/getmyactualservices": {
             "get": {
                 "security": [
@@ -1187,10 +1227,24 @@ const docTemplate = `{
                 }
             }
         },
+        "models.MassageType": {
+            "type": "object",
+            "properties": {
+                "casual_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "models.MyActualService": {
             "type": "object",
             "properties": {
-                "available_slots": {
+                "booked_slots": {
                     "type": "integer"
                 },
                 "date": {

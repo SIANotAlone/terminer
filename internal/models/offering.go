@@ -15,6 +15,7 @@ type Service struct {
 	ServiceType       int       `json:"service_type" binding:"required" omitempty:"true"`
 	PerformerID       uuid.UUID `json:"-"`
 	Available_for_all bool      `json:"for_all" omitempty:"true"`
+	MassageType       *int      `json:"massage_type"`
 }
 
 type Available_time struct {
@@ -63,6 +64,12 @@ type ServiceDelete struct {
 type ServiceType struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
+}
+
+type MassageType struct {
+	ID         int    `json:"id"`
+	Name       string `json:"name"`
+	CasualName string `json:"casual_name"`
 }
 
 type MyService struct {

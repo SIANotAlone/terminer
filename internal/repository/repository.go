@@ -19,6 +19,7 @@ type Offering interface {
 	UpdateService(models.ServiceUpdate) error
 	DeleteService(id uuid.UUID) error
 	GetTypes() ([]models.ServiceType, error)
+	GetMassageTypes() ([]models.MassageType, error)
 	GetServiceOwner(id uuid.UUID) (uuid.UUID, error)
 	CreateServiceType(models.ServiceType) error
 	GetMyServices(user_id uuid.UUID) ([]models.MyService, error)

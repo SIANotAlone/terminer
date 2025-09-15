@@ -46,6 +46,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			service.POST("/update", h.UpdateService)
 			service.POST("/delete", h.DeleteService)
 			service.GET("/gettypes", h.GetTypes)
+			service.GET("/getmassagetypes", h.GetMassageTypes)
 			service.POST("/createservicetype", h.CreateServiceType)
 			service.GET("/getmyservices", h.GetMyServices)
 			service.GET("/available", h.GetAvailableServices)

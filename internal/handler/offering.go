@@ -295,6 +295,24 @@ func (h *Handler) GetTypes(c *gin.Context) {
 
 }
 
+// @Summary      Отримання типів масажу
+// @Description  Хендлер для отримання списку всіх доступних типів масажу.
+// @Tags         Послуга
+// @Produce      json
+// @Success      200    {array}   models.MassageType  "Список типів масажу"
+// @Failure      500    {object}  map[string]string   "Помилка сервера"
+// @Security     BearerAuth
+// @Router       /api/service/getmassagetypes [get]
+// @Security     ApiKeyAuth
+func (h *Handler) GetMassageTypes(c *gin.Context) {
+	types, err := h.services.Offering.GetMassageTypes()
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, types)
+}
+
 // @Summary      Створення типу послуги
 // @Description  Хендлер для створення нового типу послуги. Приймає структуру ServiceType.
 // @Tags         Послуга
