@@ -83,6 +83,18 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			Termin.GET("/getallperformertermins", h.GetAllPerformerTermins)
 			Termin.GET("/getallusertermins", h.GetAllUserTermins)
 		}
+		Statistic := api.Group("/statistic")
+		{
+			Statistic.GET("/gavedonerecords", h.GetGaveDoneRecordsStatistic)
+			Statistic.GET("/gavedrecordspromonth", h.GetGavedRecordsProMonthStatistic)
+			Statistic.GET("/recievedrecordspromonth", h.GetRecievedRecordsProMonthStatistic)
+			Statistic.GET("/massagetype", h.GetMassageProTypeStatistic)
+			Statistic.GET("/resievedmassagetype", h.GetResievedMassageProTypeStatistic)
+			Statistic.GET("/resievedservicebytypes", h.GetRecievedServicesByTypesStatistic)
+			Statistic.GET("/providetservicebytypes", h.GetProvidetServicesByTypesStatistic)
+			Statistic.GET("/getavailableyears", h.GetAvailableYears)
+			Statistic.GET("/mainstatistic", h.GetMainStatistic)
+		}
 
 	}
 

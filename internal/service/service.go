@@ -67,6 +67,18 @@ type User interface {
 	IsAdmin(id uuid.UUID) (bool, error)
 }
 
+type Statistic interface {
+	GetProvidedDoneRecordsStatistic(user uuid.UUID, year int) (models.GaveDoneStatistic, error)
+	GetProvidedRecordsProMonthStatistic(user uuid.UUID, year int) (models.RecordsProMonthStatistic, error)
+	GetRecievedRecordsProMonthStatistic(user uuid.UUID, year int) (models.RecordsProMonthStatistic, error)
+	GetMassageProTypeStatistic(user uuid.UUID, year int) (models.StatisticByType, error)
+	GetResievedMassageProTypeStatistic(user uuid.UUID, year int) (models.StatisticByType, error)
+	GetResievedServicesTypes(user uuid.UUID, year int) (models.StatisticByType, error)
+	GetProvidedServicesTypes(user uuid.UUID, year int) (models.StatisticByType, error)
+	GetAvailableYears(user uuid.UUID) ([]int, error)
+	GetMainStatistic(user uuid.UUID, year int) (models.MainStatistic, error)
+}
+
 type Service struct {
 	Authorization
 	Offering
@@ -74,6 +86,7 @@ type Service struct {
 	Record
 	Comment
 	Termin
+	Statistic
 	logger logrus.Logger
 }
 
@@ -85,6 +98,7 @@ func NewService(repos *repository.Repository, logger *logrus.Logger) *Service {
 		Record:        NewRecordService(repos.Record, logger),
 		Comment:       NewCommentService(repos.Comment),
 		Termin:        NewTerminService(repos.Termin),
+		Statistic:     NewStatisticService(repos.Statistic),
 		logger:        *logger,
 	}
 }
