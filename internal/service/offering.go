@@ -144,6 +144,10 @@ func (s *OfferingService) GetTypes() ([]models.ServiceType, error) {
 	return s.repo.GetTypes()
 }
 
+func (s *OfferingService) GetMassageTypes() ([]models.MassageType, error) {
+	return s.repo.GetMassageTypes()
+}
+
 func (s *OfferingService) GetServiceOwner(id uuid.UUID) (uuid.UUID, error) {
 	return s.repo.GetServiceOwner(id)
 }

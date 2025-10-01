@@ -19,6 +19,7 @@ type Offering interface {
 	UpdateService(models.ServiceUpdate) error
 	DeleteService(id uuid.UUID) error
 	GetTypes() ([]models.ServiceType, error)
+	GetMassageTypes() ([]models.MassageType, error)
 	GetServiceOwner(id uuid.UUID) (uuid.UUID, error)
 	CreateServiceType(models.ServiceType) error
 	GetMyServices(user_id uuid.UUID) ([]models.MyService, error)
@@ -70,6 +71,22 @@ type User interface {
 	IsAdmin(id uuid.UUID) (bool, error)
 }
 
+type Statistic interface {
+	GetProvidedDoneRecordsStatistic(user uuid.UUID, year int) (models.GaveDoneStatistic, error)
+	GetProvidedRecordsProMonthStatistic(user uuid.UUID, year int) (models.ProMonth, error)
+	GetProvidedServicesProMonthStatistic(user uuid.UUID, year int) (models.ProMonth, error)
+	GetRecievedRecordsProMonthStatistic(user uuid.UUID, year int) (models.ProMonth, error)
+	GetRecievedServicesProMonthStatistic(user uuid.UUID, year int) (models.ProMonth, error)
+	GetMassageProTypeStatistic(user uuid.UUID, year int) ([]models.ByType, error)
+	GetResievedMassageProTypeStatistic(user uuid.UUID, year int) ([]models.ByType, error)
+	GetResievedServicesTypes(user uuid.UUID, year int) ([]models.ByType, error)
+	GetProvidedServicesTypes(user uuid.UUID, year int) ([]models.ByType, error)
+	GetAvailableYears(user uuid.UUID) ([]int, error)
+	GetMainStatistic(user uuid.UUID, year int) (models.MainStatistic, error)
+
+
+}
+
 type Repository struct {
 	Authorization
 	Offering
@@ -77,6 +94,7 @@ type Repository struct {
 	Record
 	Comment
 	Termin
+	Statistic
 	logger logrus.Logger
 }
 
@@ -88,6 +106,7 @@ func NewRepository(db *sqlx.DB, logger *logrus.Logger) *Repository {
 		Record:        NewRecordPostgres(db),
 		Comment:       NewCommentPostgres(db),
 		Termin:        NewTerminPostgres(db),
+		Statistic:     NewStatisticPostgres(db),
 		logger:        *logger,
 	}
 }

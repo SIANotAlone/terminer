@@ -46,6 +46,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			service.POST("/update", h.UpdateService)
 			service.POST("/delete", h.DeleteService)
 			service.GET("/gettypes", h.GetTypes)
+			service.GET("/getmassagetypes", h.GetMassageTypes)
 			service.POST("/createservicetype", h.CreateServiceType)
 			service.GET("/getmyservices", h.GetMyServices)
 			service.GET("/available", h.GetAvailableServices)
@@ -81,6 +82,18 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		{
 			Termin.GET("/getallperformertermins", h.GetAllPerformerTermins)
 			Termin.GET("/getallusertermins", h.GetAllUserTermins)
+		}
+		Statistic := api.Group("/statistic")
+		{
+			Statistic.GET("/provideddonerecords", h.GetGaveDoneRecordsStatistic)
+			Statistic.GET("/providedrecordspromonth", h.GetGavedRecordsProMonthStatistic)
+			Statistic.GET("/recievedrecordspromonth", h.GetRecievedRecordsProMonthStatistic)
+			Statistic.GET("/massagetype", h.GetMassageProTypeStatistic)
+			Statistic.GET("/resievedmassagetype", h.GetResievedMassageProTypeStatistic)
+			Statistic.GET("/resievedservicebytypes", h.GetRecievedServicesByTypesStatistic)
+			Statistic.GET("/providetservicebytypes", h.GetProvidetServicesByTypesStatistic)
+			Statistic.GET("/getavailableyears", h.GetAvailableYears)
+			Statistic.GET("/mainstatistic", h.GetMainStatistic)
 		}
 
 	}

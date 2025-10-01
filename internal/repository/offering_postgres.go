@@ -15,6 +15,7 @@ const (
 	available_timeTable = "main.available_time"
 	service_typeTable   = "main.service_type"
 	time_layout         = "15:04"
+	massage_typeTable   = "main.massage_type"
 )
 
 type OfferingPostgres struct {
@@ -31,8 +32,8 @@ func (r *OfferingPostgres) CreateOffering(offering models.NewService) (uuid.UUID
 		return uuid.Nil, err
 	}
 	var id uuid.UUID
-	create_service_query := fmt.Sprintf("INSERT INTO %s (name, description, date, date_end, service_type_id, performer_id, available_for_all) VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, $6) RETURNING uuid", servicesTable)
-	row := tx.QueryRow(create_service_query, offering.Service.Name, offering.Service.Description, offering.Service.DateEnd, offering.Service.ServiceType, offering.Service.PerformerID, offering.Service.Available_for_all)
+	create_service_query := fmt.Sprintf("INSERT INTO %s (name, description, date, date_end, service_type_id, performer_id, available_for_all, massage_type_id) VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, $6, $7) RETURNING uuid", servicesTable)
+	row := tx.QueryRow(create_service_query, offering.Service.Name, offering.Service.Description, offering.Service.DateEnd, offering.Service.ServiceType, offering.Service.PerformerID, offering.Service.Available_for_all, offering.Service.MassageType)
 	if err := row.Scan(&id); err != nil {
 		tx.Rollback()
 		return id, err
@@ -101,6 +102,22 @@ func (r *OfferingPostgres) GetTypes() ([]models.ServiceType, error) {
 		service_types = append(service_types, service_type)
 	}
 	return service_types, nil
+}
+func (r *OfferingPostgres) GetMassageTypes() ([]models.MassageType, error) {
+	query := fmt.Sprintf(`select dc.id, dc.name, dc.casual_name from %s dc`, massage_typeTable)
+	row, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	var massage_types []models.MassageType
+	for row.Next() {
+		var massage_type models.MassageType
+		if err := row.Scan(&massage_type.ID, &massage_type.Name, &massage_type.CasualName); err != nil {
+			return nil, err
+		}
+		massage_types = append(massage_types, massage_type)
+	}
+	return massage_types, nil
 }
 
 func (r *OfferingPostgres) GetServiceOwner(id uuid.UUID) (uuid.UUID, error) {
@@ -430,7 +447,6 @@ func (r *OfferingPostgres) GetPromoCodeServiceOwnerTelegramID(promocode string) 
 	}
 	return telegram_id, nil
 }
-
 
 func (r *OfferingPostgres) GetUserName(user_id uuid.UUID) (string, error) {
 	query := `select dc.first_name || ' ' || dc.last_name as name from main.user dc
