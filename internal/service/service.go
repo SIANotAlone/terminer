@@ -31,6 +31,12 @@ type Offering interface {
 	ActivatePromoCode(code string, user_id uuid.UUID) error
 	GetMyActualServices(user_id uuid.UUID) ([]models.MyActualService, error)
 	GetHistoryMyServices(user_id uuid.UUID, limit int64, offset int64) (models.UserServiceHistory, error)
+	GetFullServiceInfo(id uuid.UUID) (models.FullServiceInformation, error)
+	EditService(service models.ServiceInformation, user uuid.UUID) error
+	NewAvailableTime(at models.NewAvailableTime, user uuid.UUID) (int, error)
+	DeleteAvailableTime(at models.DeleteAvailableTime, user uuid.UUID) error
+	NewAvailableFor(af models.NewAvailableFor, user uuid.UUID) (int, error)
+	DeleteAvailableFor(af models.DeleteAvailableFor, user uuid.UUID) error
 
 	GetUserTelegramID(user_id uuid.UUID) (string, error)
 	GetAllUsersTelegramID() ([]string, error)

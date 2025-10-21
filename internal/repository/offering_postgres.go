@@ -163,13 +163,14 @@ func (r *OfferingPostgres) GetMyServices(user_id uuid.UUID) ([]models.MyService,
 func (r *OfferingPostgres) GetAvailableService(user_id uuid.UUID) ([]models.AvailableService, error) {
 	query := `select s.uuid as id,
  s.name as service, s.description, uu.first_name as p1, uu.last_name as p2,
- uu.email as p3, s.date, s.date_end, st.name as service_type
+ uu.email as p3, s.date, s.date_end, st.name as service_type, COALESCE(mt.name, '') as massage_type
 from main.available_for dc
 
 left join main.user u on dc.user_id = u.uuid
 left join main.service s on s.uuid = dc.service_id
 left join main.user uu on s.performer_id = uu.uuid
 left join main.service_type st on s.service_type_id = st.id
+left join main.massage_type mt on s.massage_type_id = mt.id
 
 where dc.user_id = $1 and s.date_end >= CURRENT_DATE 
 -- Фильтр по количеству доступных записей
@@ -177,11 +178,12 @@ and  (select count(*) from main.record r where r.service_id = s.uuid) < (select 
 
 union 
 select s.uuid as id, s.name as service, s.description, u.first_name as p1,
-u.last_name as p2, u.email as p3, s.date, s.date_end, st.name as service_type
+u.last_name as p2, u.email as p3, s.date, s.date_end, st.name as service_type, COALESCE(mt.name, '') as massage_type
 from main.service s
 
 left join main.user u on u.uuid = s.performer_id
 left join main.service_type st on st.id = s.service_type_id
+left join main.massage_type mt on s.massage_type_id = mt.id
 
 where s.available_for_all = true and date_end >= CURRENT_DATE 
 and s.performer_id != $1
@@ -197,7 +199,7 @@ and  (select count(*) from main.record r where r.service_id = s.uuid) < (select 
 	}
 	for row.Next() {
 		var ms models.AvailableService
-		if err := row.Scan(&ms.ID, &ms.Name, &ms.Description, &ms.FirstName, &ms.LastName, &ms.Email, &ms.Date, &ms.DateEnd, &ms.ServiceType); err != nil {
+		if err := row.Scan(&ms.ID, &ms.Name, &ms.Description, &ms.FirstName, &ms.LastName, &ms.Email, &ms.Date, &ms.DateEnd, &ms.ServiceType, &ms.MassageType); err != nil {
 			return nil, err
 		}
 		available_services = append(available_services, ms)
@@ -329,10 +331,12 @@ func (r *OfferingPostgres) ActivatePromoCode(service_id uuid.UUID, user_id uuid.
 
 func (r *OfferingPostgres) GetMyActualServices(user_id uuid.UUID) ([]models.MyActualService, error) {
 	query := `select dc.uuid, dc.name, dc.description, st.name as service_type, dc.date, dc.date_end, u.last_name || ' ' || u.first_name as performer,
-(select count(*) from main.available_time where service_id = dc.uuid ), (select count(*) from main.available_time where booked =true and service_id=dc.uuid )
+(select count(*) from main.available_time where service_id = dc.uuid ), (select count(*) from main.available_time where booked =true and service_id=dc.uuid ),
+COALESCE(mt.name, '') as massage_type
 from main.service dc
 	left join main.user u on dc.performer_id = u.uuid
 	left join main.service_type st on dc.service_type_id = st.id
+	left join main.massage_type mt on mt.id = dc.massage_type_id
 	where dc.performer_id = $1
 	and 
 	-- Загальна кількість термінів
@@ -350,7 +354,7 @@ from main.service dc
 	}
 	for row.Next() {
 		var service models.MyActualService
-		if err := row.Scan(&service.ID, &service.Name, &service.Description, &service.ServiceType, &service.Date, &service.DateEnd, &service.Performer, &service.TotalSlots, &service.BookedSlots); err != nil {
+		if err := row.Scan(&service.ID, &service.Name, &service.Description, &service.ServiceType, &service.Date, &service.DateEnd, &service.Performer, &service.TotalSlots, &service.BookedSlots, &service.MassageType); err != nil {
 			return nil, err
 		}
 		services = append(services, service)
@@ -369,6 +373,7 @@ func (r *OfferingPostgres) GetHistoryMyServices(user_id uuid.UUID, limit int64, 
 	u.last_name || ' ' || u.first_name as performer,
     COALESCE(t.count_all, 0) AS count_all, 
     COALESCE(tt.booked, 0) AS booked --Заброньовані
+	, COALESCE(mt.name, '') as massage_type
 FROM main.service dc
 
 LEFT JOIN (
@@ -384,6 +389,8 @@ LEFT JOIN (
 ) tt ON tt.service_id = dc.uuid
 left join main.user u on u.uuid = dc.performer_id
 left join main.service_type st on st.id =dc.service_type_id
+left join main.massage_type mt on mt.id = dc.massage_type_id
+
 WHERE dc.performer_id = $1
 ORDER BY dc.date desc
  LIMIT $2 OFFSET $3
@@ -397,7 +404,7 @@ ORDER BY dc.date desc
 	}
 	for row.Next() {
 		var service models.MyActualService
-		if err := row.Scan(&service.ID, &service.Name, &service.Description, &service.ServiceType, &service.Date, &service.DateEnd, &service.Performer, &service.TotalSlots, &service.BookedSlots); err != nil {
+		if err := row.Scan(&service.ID, &service.Name, &service.Description, &service.ServiceType, &service.Date, &service.DateEnd, &service.Performer, &service.TotalSlots, &service.BookedSlots, &service.MassageType); err != nil {
 			return nil, err
 		}
 		services = append(services, service)
@@ -459,4 +466,161 @@ func (r *OfferingPostgres) GetUserName(user_id uuid.UUID) (string, error) {
 	}
 
 	return name, nil
+}
+
+func (r *OfferingPostgres) GetFullServiceInfo(id uuid.UUID) (models.FullServiceInformation, error) {
+	var fsi models.FullServiceInformation
+	var serviceinfo models.ServiceInformation
+	var availablefor []models.Available_for_Info
+	var availabletime []models.Available_time_Info
+	serviceinfo_query := `select dc.uuid, dc.name, dc.description, dc.date, dc.date_end, dc.service_type_id, 
+dc.available_for_all, COALESCE(dc.massage_type_id, 0) as massage_type_id
+--  date - не редактируемое 
+from main.service dc
+where dc.uuid= $1
+order by dc.date desc`
+
+	row := r.db.QueryRow(serviceinfo_query, id)
+	if err := row.Scan(&serviceinfo.ID, &serviceinfo.Name, &serviceinfo.Description, &serviceinfo.Date, &serviceinfo.DateEnd,
+		&serviceinfo.ServiceTypeID, &serviceinfo.AvailableForAll, &serviceinfo.MassageTypeID); err != nil {
+		return models.FullServiceInformation{}, err
+	}
+
+	fsi.ServiceInformation = serviceinfo
+
+	availableforquery := `
+select dc.id, dc.user_id, u.last_name || ' ' || u.first_name from main.available_for dc
+left join main.user u on u.uuid = dc.user_id
+where dc.service_id = $1`
+
+	rows, err := r.db.Query(availableforquery, id)
+	if err != nil {
+		return models.FullServiceInformation{}, err
+	}
+	for rows.Next() {
+		var user_id uuid.UUID
+		var af_id int
+		var name string
+		if err := rows.Scan(&af_id, &user_id, &name); err != nil {
+			return models.FullServiceInformation{}, err
+		}
+		availablefor = append(availablefor, models.Available_for_Info{UserID: user_id, ID: af_id, Name: name})
+	}
+	fsi.Available_for = availablefor
+
+	availabletimequery := `select id, dc.time_start, dc.time_end, dc.booked from main.available_time dc
+where dc.service_id = $1`
+
+	rows, err = r.db.Query(availabletimequery, id)
+	if err != nil {
+		return models.FullServiceInformation{}, err
+	}
+	for rows.Next() {
+		var available_time models.Available_time_Info
+		if err := rows.Scan(&available_time.ID, &available_time.TimeStart, &available_time.TimeEnd, &available_time.Booked); err != nil {
+			return models.FullServiceInformation{}, err
+		}
+		availabletime = append(availabletime, available_time)
+	}
+	fsi.Available_time_Info = availabletime
+
+	return fsi, nil
+
+}
+
+func (r *OfferingPostgres) EditService(service models.ServiceInformation) error {
+
+	update_service_query := `UPDATE main.service 
+SET 
+    name = $1,
+    description = $2,
+    date_end = $3,
+    service_type_id = $4,
+    available_for_all = $5,
+    massage_type_id = $6
+WHERE 
+    uuid = $7;`
+
+	_, err := r.db.Exec(update_service_query, service.Name, service.Description, service.DateEnd, service.ServiceTypeID,
+		service.AvailableForAll, service.MassageTypeID, service.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *OfferingPostgres) NewAvailableTime(at models.NewAvailableTime) (int, error) {
+
+	query := `insert into main.available_time(service_id, time_start, time_end) values ($1, $2, $3) returning id`
+
+	var id int
+	err := r.db.QueryRow(query, at.ServiceID, at.TimeStart, at.TimeEnd).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+func (r *OfferingPostgres) DeleteAvailableTime(at models.DeleteAvailableTime, user uuid.UUID) error {
+	var owner uuid.UUID
+	var booked bool
+	query := fmt.Sprintf(`select u.uuid, dc.booked from main.available_time dc
+			left join main.service s on s.uuid = dc.service_id
+			left join main.user u on u.uuid = s.performer_id
+			where dc.id = $1`)
+	row := r.db.QueryRow(query, at.ID)
+	if err := row.Scan(&owner, &booked); err != nil {
+		return err
+	}
+	if owner != user {
+		return fmt.Errorf("user is not owner of service")
+	}
+	if booked == true {
+		return fmt.Errorf("this time is already booked")
+	}
+
+	query2 := fmt.Sprintf(`DELETE FROM main.available_time
+			WHERE id = $1`)
+	_, err := r.db.Exec(query2, at.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *OfferingPostgres) NewAvailableFor(af models.NewAvailableFor) (int, error) {
+
+	query := `insert into main.available_for(service_id, user_id) values ($1, $2) returning id`
+
+	var id int
+	err := r.db.QueryRow(query, af.ServiceID, af.UserID).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+func (r *OfferingPostgres) DeleteAvailableFor(af models.DeleteAvailableFor, user uuid.UUID) error {
+	var owner uuid.UUID
+	query := fmt.Sprintf(`select u.uuid from main.available_for dc
+			left join main.service s on s.uuid = dc.service_id
+			left join main.user u on u.uuid = s.performer_id
+			where dc.id = $1`)
+	row := r.db.QueryRow(query, af.ID)
+	if err := row.Scan(&owner); err != nil {
+		return err
+	}
+	if owner != user {
+		return fmt.Errorf("user is not owner of service")
+	}
+
+	query2 := fmt.Sprintf(`DELETE FROM main.available_for
+			WHERE id = $1`)
+	_, err := r.db.Exec(query2, af.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

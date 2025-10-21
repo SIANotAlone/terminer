@@ -6,6 +6,7 @@ import (
 	"terminer/internal/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // CreateService створює послугу
@@ -415,4 +416,129 @@ func (h *Handler) GetAvailableTime(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, available_times)
+}
+
+func (h *Handler) GetFullServiceInfo(c *gin.Context) {
+	serviceID := c.Param("serviceid")
+	parsedUUID, err := uuid.Parse(serviceID)
+	if err != nil {
+		NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	service, err := h.services.Offering.GetFullServiceInfo(parsedUUID)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, service)
+}
+
+func (h *Handler) EditService(c *gin.Context) {
+	var service models.ServiceInformation
+	if err := c.BindJSON(&service); err != nil {
+		NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	var userID uuid.UUID
+	userID, err := getUserId(c)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if err := h.services.Offering.EditService(service, userID); err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "ok",
+	})
+}
+
+func (h *Handler) NewAvailableFor(c *gin.Context) {
+	var availableFor models.NewAvailableFor
+	if err := c.BindJSON(&availableFor); err != nil {
+		NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	var userID uuid.UUID
+	userID, err := getUserId(c)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	new_id, err := h.services.Offering.NewAvailableFor(availableFor, userID)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "ok",
+		"id":      new_id,
+	})
+}
+
+func (h *Handler) DeleteAvailableFor(c *gin.Context) {
+	var availableFor models.DeleteAvailableFor
+	if err := c.BindJSON(&availableFor); err != nil {
+		NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	var userID uuid.UUID
+	userID, err := getUserId(c)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if err := h.services.Offering.DeleteAvailableFor(availableFor, userID); err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "ok",
+	})
+}
+
+func (h *Handler) NewAvailableTime(c *gin.Context) {
+	var availableTime models.NewAvailableTime
+	if err := c.BindJSON(&availableTime); err != nil {
+		NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	var userID uuid.UUID
+	userID, err := getUserId(c)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	new_id, err := h.services.Offering.NewAvailableTime(availableTime, userID)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "ok",
+		"id":      new_id,
+	})
+}
+
+func (h *Handler) DeleteAvailableTime(c *gin.Context) {
+	var availableTime models.DeleteAvailableTime
+	if err := c.BindJSON(&availableTime); err != nil {
+		NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	var userID uuid.UUID
+	userID, err := getUserId(c)
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if err := h.services.Offering.DeleteAvailableTime(availableTime, userID); err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "ok",
+	})
 }
