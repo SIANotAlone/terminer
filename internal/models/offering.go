@@ -26,7 +26,7 @@ type Available_time struct {
 }
 type Available_for struct {
 	ID        int       `json:"-"`
-	ServiceID uuid.UUID `json:"-`
+	ServiceID uuid.UUID `json:"-"`
 	UserID    uuid.UUID `json:"user_id" binding:"required" omitempty:"true"`
 }
 
@@ -90,6 +90,7 @@ type AvailableService struct {
 	Date        time.Time `json:"date"`
 	DateEnd     time.Time `json:"date_end"`
 	ServiceType string    `json:"service_type"`
+	MassageType string    `json:"massage_type"`
 }
 
 type ServiceAvailableTime struct {
@@ -143,6 +144,7 @@ type MyActualService struct {
 	Performer   string    `json:"performer"`
 	TotalSlots  int64     `json:"total_slots"`
 	BookedSlots int64     `json:"booked_slots"`
+	MassageType string    `json:"massage_type"`
 }
 
 type MyHistoryServiceInput struct {
@@ -163,4 +165,52 @@ type PromocodeServiceInfo struct {
 type UserServiceHistory struct {
 	History []MyActualService `json:"history"`
 	Total   int64             `json:"total"`
+}
+
+type FullServiceInformation struct {
+	ServiceInformation  ServiceInformation    `json:"service"`
+	Available_for       []Available_for_Info  `json:"available_for"`
+	Available_time_Info []Available_time_Info `json:"available_time"`
+}
+
+type ServiceInformation struct {
+	ID              uuid.UUID  `json:"id"`
+	Name            string     `json:"name"`
+	Description     string     `json:"description"`
+	Date            *time.Time `json:"date"`
+	DateEnd         time.Time  `json:"date_end"`
+	ServiceTypeID   int        `json:"service_type_id"`
+	AvailableForAll bool       `json:"available_for_all"`
+	MassageTypeID   int        `json:"massage_type_id"`
+}
+
+type Available_time_Info struct {
+	ID        int    `json:"id"`
+	TimeStart string `json:"time_start"`
+	TimeEnd   string `json:"time_end"`
+	Booked    bool   `json:"booked"`
+}
+type Available_for_Info struct {
+	ServiceID uuid.UUID `json:"-"`
+	ID        int       `json:"id"`
+	UserID    uuid.UUID `json:"user_id" binding:"required" omitempty:"true"`
+	Name      string    `json:"name"`
+}
+type NewAvailableTime struct {
+	ServiceID uuid.UUID `json:"service_id" binding:"required" omitempty:"true"`
+	TimeStart string    `json:"time_start" binding:"required" omitempty:"true"`
+	TimeEnd   string    `json:"time_end" binding:"required" omitempty:"true"`
+}
+
+type DeleteAvailableTime struct {
+	ID int `json:"id" binding:"required" omitempty:"true"`
+}
+
+type NewAvailableFor struct {
+	UserID    uuid.UUID `json:"user_id" binding:"required" omitempty:"true"`
+	ServiceID uuid.UUID `json:"service_id" binding:"required" omitempty:"true"`
+}
+
+type DeleteAvailableFor struct {
+	ID int `json:"id" binding:"required" omitempty:"true"`
 }

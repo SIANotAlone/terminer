@@ -20,4 +20,5 @@ type Termin struct {
 	Done         bool      `json:"done"`
 	User_confirm bool      `json:"user_confirm"`
 	User_record  string    `json:"user_record"`
+	MassageType  string    `json:"massage_type"`
 }

@@ -176,6 +176,10 @@ func (s *OfferingService) GetAllUsersTelegramID() ([]string, error) {
 	return s.repo.GetAllUsersTelegramID()
 }
 
+func (s *OfferingService) GetFullServiceInfo(id uuid.UUID) (models.FullServiceInformation, error) {
+	return s.repo.GetFullServiceInfo(id)
+}
+
 func (s *OfferingService) notificateAllUsers(subject *observer.ConcreteSubject, message string, exeption uuid.UUID) {
 	users, err := s.repo.GetAllUsersTelegramID()
 	if err != nil {
@@ -194,6 +198,52 @@ func (s *OfferingService) notificateAllUsers(subject *observer.ConcreteSubject, 
 }
 func (s *OfferingService) notificate_one_user(subject *observer.ConcreteSubject, message string, tg_id string) {
 	subject.Notify(tg_id, message)
+}
+
+func (s *OfferingService) EditService(service models.ServiceInformation, user uuid.UUID) error {
+	owner, err := s.repo.GetServiceOwner(service.ID)
+	if err != nil {
+		s.logger.Warn(err)
+	}
+	if owner == user {
+		return s.repo.EditService(service)
+	} else {
+		return fmt.Errorf("you are not owner of this service")
+	}
+
+}
+
+func (s *OfferingService) NewAvailableTime(at models.NewAvailableTime, user uuid.UUID) (int, error) {
+	owner, err := s.repo.GetServiceOwner(at.ServiceID)
+	if err != nil {
+		s.logger.Warn(err)
+	}
+	if owner == user {
+		return s.repo.NewAvailableTime(at)
+	} else {
+		return 0, fmt.Errorf("you are not owner of this service")
+	}
+}
+
+func (s *OfferingService) DeleteAvailableTime(at models.DeleteAvailableTime, user uuid.UUID) error{
+ return s.repo.DeleteAvailableTime(at, user)
+}
+
+func (s *OfferingService) NewAvailableFor(af models.NewAvailableFor, user uuid.UUID) (int, error) {
+	owner, err := s.repo.GetServiceOwner(af.ServiceID)
+	if err != nil {
+		s.logger.Warn(err)
+	}
+	if owner == user {
+		return s.repo.NewAvailableFor(af)
+	} else {
+		return 0, fmt.Errorf("you are not owner of this service")
+	}
+}
+
+
+func (s *OfferingService) DeleteAvailableFor(af models.DeleteAvailableFor, user uuid.UUID) error{
+	return s.repo.DeleteAvailableFor(af, user)
 }
 
 func (s *OfferingService) notificate_available_for_users(subject *observer.ConcreteSubject, message string, users []models.Available_for) {

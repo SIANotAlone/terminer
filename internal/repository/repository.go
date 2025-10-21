@@ -33,7 +33,13 @@ type Offering interface {
 	GetTotalUserServices(user_id uuid.UUID) (int64, error)
 	GetPromoCodeServiceOwnerTelegramID(promocode string) (string, error)
 	GetUserName(user_id uuid.UUID) (string, error)
-
+	GetFullServiceInfo(id uuid.UUID) (models.FullServiceInformation, error)
+	EditService(service models.ServiceInformation) error
+	NewAvailableTime(at models.NewAvailableTime) (int, error)
+	DeleteAvailableTime(at models.DeleteAvailableTime, user uuid.UUID) error
+	NewAvailableFor(af models.NewAvailableFor) (int, error)
+	DeleteAvailableFor(af models.DeleteAvailableFor, user uuid.UUID) error
+	
 	GetUserTelegramID(user_id uuid.UUID) (string, error)
 	GetAllUsersTelegramID() ([]string, error)
 }

@@ -55,6 +55,12 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			service.POST("/activate_promo", h.ActivatePromoCode)
 			service.GET("/getmyactualservices", h.GetMyActualServices)
 			service.POST("/getmyhistory", h.GetMyHistory)
+			service.GET("/getfullserviceinfo/:serviceid", h.GetFullServiceInfo)
+			service.PUT("/edit", h.EditService)
+			service.POST("/newavailablefor", h.NewAvailableFor)
+			service.POST("/deleteavailablefor", h.DeleteAvailableFor)
+			service.POST("newavailabletime", h.NewAvailableTime)
+			service.POST("/deleteavailabletime", h.DeleteAvailableTime)
 
 		}
 		record := api.Group("/record")
