@@ -298,17 +298,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/service/availabletime": {
+        "/api/service/availablefor": {
             "post": {
                 "security": [
                     {
                         "BearerAuth": []
-                    },
-                    {
-                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Хендлер для отримання доступного часу для конкретної послуги. Приймає структуру з ID послуги в тілі запиту.",
+                "description": "Хендлер для створення нового запису про доступний час (вікно) для певної послуги. Приймає структуру з даними про час і послугу. ID користувача використовується для перевірки прав доступу/власності.",
                 "consumes": [
                     "application/json"
                 ],
@@ -318,31 +315,28 @@ const docTemplate = `{
                 "tags": [
                     "Послуга"
                 ],
-                "summary": "Отримання доступного часу для послуги",
+                "summary": "Додавання нового доступного часу/вікна для послуги",
                 "parameters": [
                     {
-                        "description": "Дані для отримання доступного часу послуги",
-                        "name": "serviceID",
+                        "description": "Дані про новий доступний час (наприклад, дата, час початку/кінця, ID послуги)",
+                        "name": "availableFor",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.ServiceAvailableTimeInput"
+                            "$ref": "#/definitions/models.NewAvailableFor"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Список доступного часу для послуги",
+                        "description": "Успішне створення запису",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "additionalProperties": true
-                            }
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Помилка запиту",
+                        "description": "Помилка вхідних даних (невірний формат JSON)",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -351,7 +345,181 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "Помилка сервера",
+                        "description": "Помилка сервера (неможливо отримати ID користувача, або помилка при створенні запису в базі даних)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Хендлер для видалення існуючого запису про доступний час для певної послуги. Приймає структуру з ID запису, який потрібно видалити, у тілі запиту. ID користувача використовується для перевірки прав доступу/власності.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Послуга"
+                ],
+                "summary": "Видалення запису про доступний час/вікно",
+                "parameters": [
+                    {
+                        "description": "Дані для видалення доступного часу (повинно містити ID запису)",
+                        "name": "availableFor",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.DeleteAvailableFor"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Запис про доступний час успішно видалено",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Помилка вхідних даних (невірний формат JSON)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Помилка сервера (неможливо отримати ID користувача, помилка видалення запису в базі даних або відсутність прав)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/service/availabletime": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Хендлер для створення нового запису про доступний час (одиничний слот) для певної послуги. Приймає структуру з даними слоту. ID користувача використовується для перевірки прав доступу/власності на послугу.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Послуга"
+                ],
+                "summary": "Додавання нового доступного часу для послуги (одиничний слот)",
+                "parameters": [
+                    {
+                        "description": "Дані про новий доступний часовий слот (наприклад, ID послуги, час початку/кінця)",
+                        "name": "availableTime",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.NewAvailableTime"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успішне створення часового слоту",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Помилка вхідних даних (невірний формат JSON)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Помилка сервера (неможливо отримати ID користувача, або помилка при створенні запису в базі даних)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Хендлер для видалення існуючого одиничного часового слоту (available time). Приймає структуру з ID слоту, який потрібно видалити, у тілі запиту. ID користувача використовується для перевірки прав доступу/власності на послугу.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Послуга"
+                ],
+                "summary": "Видалення запису про доступний часовий слот",
+                "parameters": [
+                    {
+                        "description": "Дані для видалення доступного часового слоту (повинно містити ID слоту)",
+                        "name": "availableTime",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.DeleteAvailableTime"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Запис про доступний час успішно видалено",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Помилка вхідних даних (невірний формат JSON)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Помилка сервера (неможливо отримати ID користувача, помилка видалення запису в базі даних або відсутність прав)",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -531,7 +699,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Хендлер для видалення послуги. Приймає структуру ServiceDelete. Перевіряє, чи користувач є адміністратором або власником послуги.",
+                "description": "Хендлер для видалення послуги. Приймає структуру ServiceDelete. Перевіряє, чи є користувачвласником послуги.",
                 "consumes": [
                     "application/json"
                 ],
@@ -572,6 +740,66 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Помилка сервера",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/service/edit": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Хендлер для оновлення детальної інформації про існуючу послугу. Приймає повну структуру послуги (models.ServiceInformation) в тілі запиту. Користувач повинен бути автентифікований, а його ID використовується для перевірки прав доступу.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Послуга"
+                ],
+                "summary": "Редагування існуючої послуги",
+                "parameters": [
+                    {
+                        "description": "Дані послуги для оновлення. Повинен містити ID послуги.",
+                        "name": "service",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ServiceInformation"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Послугу успішно оновлено",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Помилка вхідних даних (невірний формат JSON)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Помилка сервера (неможливо отримати ID користувача, або помилка оновлення послуги в базі даних)",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -924,6 +1152,61 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/service/{serviceid}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Хендлер для отримання детальної інформації про конкретну послугу за її ID. ID послуги передається як параметр маршруту.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Послуга"
+                ],
+                "summary": "Отримання повної інформації про послугу",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID послуги (UUID)",
+                        "name": "serviceid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Повна інформація про послугу",
+                        "schema": {
+                            "$ref": "#/definitions/models.FullServiceInformation"
+                        }
+                    },
+                    "400": {
+                        "description": "Некоректний формат ID послуги (невалідна UUID)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Помилка сервера (наприклад, помилка отримання даних)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/termin/getallperformertermins": {
             "get": {
                 "security": [
@@ -1190,7 +1473,21 @@ const docTemplate = `{
                 "user_id"
             ],
             "properties": {
-                "serviceID": {
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Available_for_Info": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
                     "type": "string"
                 },
                 "user_id": {
@@ -1216,6 +1513,45 @@ const docTemplate = `{
                 }
             }
         },
+        "models.Available_time_Info": {
+            "type": "object",
+            "properties": {
+                "booked": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "time_end": {
+                    "type": "string"
+                },
+                "time_start": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.DeleteAvailableFor": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.DeleteAvailableTime": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.DoneRecord": {
             "type": "object",
             "required": [
@@ -1224,6 +1560,26 @@ const docTemplate = `{
             "properties": {
                 "id": {
                     "type": "string"
+                }
+            }
+        },
+        "models.FullServiceInformation": {
+            "type": "object",
+            "properties": {
+                "available_for": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Available_for_Info"
+                    }
+                },
+                "available_time": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Available_time_Info"
+                    }
+                },
+                "service": {
+                    "$ref": "#/definitions/models.ServiceInformation"
                 }
             }
         },
@@ -1259,6 +1615,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "massage_type": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -1281,6 +1640,40 @@ const docTemplate = `{
                 },
                 "offset": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.NewAvailableFor": {
+            "type": "object",
+            "required": [
+                "service_id",
+                "user_id"
+            ],
+            "properties": {
+                "service_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.NewAvailableTime": {
+            "type": "object",
+            "required": [
+                "service_id",
+                "time_end",
+                "time_start"
+            ],
+            "properties": {
+                "service_id": {
+                    "type": "string"
+                },
+                "time_end": {
+                    "type": "string"
+                },
+                "time_start": {
+                    "type": "string"
                 }
             }
         },
@@ -1436,6 +1829,9 @@ const docTemplate = `{
                 "for_all": {
                     "type": "boolean"
                 },
+                "massage_type": {
+                    "type": "integer"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -1463,6 +1859,35 @@ const docTemplate = `{
             "properties": {
                 "id": {
                     "type": "string"
+                }
+            }
+        },
+        "models.ServiceInformation": {
+            "type": "object",
+            "properties": {
+                "available_for_all": {
+                    "type": "boolean"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "date_end": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "massage_type_id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "service_type_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -1518,6 +1943,9 @@ const docTemplate = `{
                 },
                 "done": {
                     "type": "boolean"
+                },
+                "massage_type": {
+                    "type": "string"
                 },
                 "performer": {
                     "type": "string"

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"terminer/internal/models"
 
@@ -133,7 +132,7 @@ func (h *Handler) UpdateService(c *gin.Context) {
 }
 
 // @Summary      Видалення послуги
-// @Description  Хендлер для видалення послуги. Приймає структуру ServiceDelete. Перевіряє, чи користувач є адміністратором або власником послуги.
+// @Description  Хендлер для видалення послуги. Приймає структуру ServiceDelete. Перевіряє, чи є користувачвласником послуги.
 // @Tags         Послуга
 // @Accept       json
 // @Produce      json
@@ -156,32 +155,14 @@ func (h *Handler) DeleteService(c *gin.Context) {
 		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	isAdmin, err := h.services.User.IsAdmin(userId)
-	if err != nil {
+
+	if err := h.services.Offering.DeleteService(input.UUID, userId); err != nil {
 		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	owner, err := h.services.GetServiceOwner(input.UUID)
-	fmt.Println("from handler", owner)
-	if isAdmin == true || owner == userId {
-		if err := h.services.Offering.DeleteService(input.UUID); err != nil {
-			NewErrorResponse(c, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		c.JSON(http.StatusOK, map[string]interface{}{
-			"message": "ok",
-			"status":  "deleted",
-		})
-
-	} else {
-
-		c.JSON(http.StatusOK, map[string]interface{}{
-			"message": "User not owner or admin",
-			"status":  "Not deleted",
-		})
-
-	}
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "ok",
+	})
 
 }
 
@@ -418,6 +399,17 @@ func (h *Handler) GetAvailableTime(c *gin.Context) {
 	c.JSON(http.StatusOK, available_times)
 }
 
+// @Summary      Отримання повної інформації про послугу
+// @Description  Хендлер для отримання детальної інформації про конкретну послугу за її ID. ID послуги передається як параметр маршруту.
+// @Tags         Послуга
+// @Accept       json
+// @Produce      json
+// @Param        serviceid  path     string  true  "ID послуги (UUID)"
+// @Success      200        {object} models.FullServiceInformation  "Повна інформація про послугу"
+// @Failure      400        {object} map[string]string  "Некоректний формат ID послуги (невалідна UUID)"
+// @Failure      500        {object} map[string]string  "Помилка сервера (наприклад, помилка отримання даних)"
+// @Security     BearerAuth
+// @Router       /api/service/{serviceid} [get]
 func (h *Handler) GetFullServiceInfo(c *gin.Context) {
 	serviceID := c.Param("serviceid")
 	parsedUUID, err := uuid.Parse(serviceID)
@@ -433,6 +425,17 @@ func (h *Handler) GetFullServiceInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, service)
 }
 
+// @Summary      Редагування існуючої послуги
+// @Description  Хендлер для оновлення детальної інформації про існуючу послугу. Приймає повну структуру послуги (models.ServiceInformation) в тілі запиту. Користувач повинен бути автентифікований, а його ID використовується для перевірки прав доступу.
+// @Tags         Послуга
+// @Accept       json
+// @Produce      json
+// @Param        service  body     models.ServiceInformation  true  "Дані послуги для оновлення. Повинен містити ID послуги."
+// @Success      200      {object} map[string]string  "Послугу успішно оновлено"
+// @Failure      400      {object} map[string]string  "Помилка вхідних даних (невірний формат JSON)"
+// @Failure      500      {object} map[string]string  "Помилка сервера (неможливо отримати ID користувача, або помилка оновлення послуги в базі даних)"
+// @Security     BearerAuth
+// @Router       /api/service/edit [put]
 func (h *Handler) EditService(c *gin.Context) {
 	var service models.ServiceInformation
 	if err := c.BindJSON(&service); err != nil {
@@ -454,6 +457,17 @@ func (h *Handler) EditService(c *gin.Context) {
 	})
 }
 
+// @Summary      Додавання нового доступного часу/вікна для послуги
+// @Description  Хендлер для створення нового запису про доступний час (вікно) для певної послуги. Приймає структуру з даними про час і послугу. ID користувача використовується для перевірки прав доступу/власності.
+// @Tags         Послуга
+// @Accept       json
+// @Produce      json
+// @Param        availableFor  body     models.NewAvailableFor  true  "Дані про новий доступний час (наприклад, дата, час початку/кінця, ID послуги)"
+// @Success      200           {object} map[string]interface{} "Успішне створення запису"
+// @Failure      400           {object} map[string]string  "Помилка вхідних даних (невірний формат JSON)"
+// @Failure      500           {object} map[string]string  "Помилка сервера (неможливо отримати ID користувача, або помилка при створенні запису в базі даних)"
+// @Security     BearerAuth
+// @Router       /api/service/availablefor [post]
 func (h *Handler) NewAvailableFor(c *gin.Context) {
 	var availableFor models.NewAvailableFor
 	if err := c.BindJSON(&availableFor); err != nil {
@@ -477,6 +491,17 @@ func (h *Handler) NewAvailableFor(c *gin.Context) {
 	})
 }
 
+// @Summary      Видалення запису про доступний час/вікно
+// @Description  Хендлер для видалення існуючого запису про доступний час для певної послуги. Приймає структуру з ID запису, який потрібно видалити, у тілі запиту. ID користувача використовується для перевірки прав доступу/власності.
+// @Tags         Послуга
+// @Accept       json
+// @Produce      json
+// @Param        availableFor  body     models.DeleteAvailableFor  true  "Дані для видалення доступного часу (повинно містити ID запису)"
+// @Success      200           {object} map[string]string "Запис про доступний час успішно видалено"
+// @Failure      400           {object} map[string]string  "Помилка вхідних даних (невірний формат JSON)"
+// @Failure      500           {object} map[string]string  "Помилка сервера (неможливо отримати ID користувача, помилка видалення запису в базі даних або відсутність прав)"
+// @Security     BearerAuth
+// @Router       /api/service/availablefor [delete]
 func (h *Handler) DeleteAvailableFor(c *gin.Context) {
 	var availableFor models.DeleteAvailableFor
 	if err := c.BindJSON(&availableFor); err != nil {
@@ -498,6 +523,17 @@ func (h *Handler) DeleteAvailableFor(c *gin.Context) {
 	})
 }
 
+// @Summary      Додавання нового доступного часу для послуги (одиничний слот)
+// @Description  Хендлер для створення нового запису про доступний час (одиничний слот) для певної послуги. Приймає структуру з даними слоту. ID користувача використовується для перевірки прав доступу/власності на послугу.
+// @Tags         Послуга
+// @Accept       json
+// @Produce      json
+// @Param        availableTime  body     models.NewAvailableTime  true  "Дані про новий доступний часовий слот (наприклад, ID послуги, час початку/кінця)"
+// @Success      200            {object} map[string]interface{} "Успішне створення часового слоту"
+// @Failure      400            {object} map[string]string  "Помилка вхідних даних (невірний формат JSON)"
+// @Failure      500            {object} map[string]string  "Помилка сервера (неможливо отримати ID користувача, або помилка при створенні запису в базі даних)"
+// @Security     BearerAuth
+// @Router       /api/service/availabletime [post]
 func (h *Handler) NewAvailableTime(c *gin.Context) {
 	var availableTime models.NewAvailableTime
 	if err := c.BindJSON(&availableTime); err != nil {
@@ -522,6 +558,17 @@ func (h *Handler) NewAvailableTime(c *gin.Context) {
 	})
 }
 
+// @Summary      Видалення запису про доступний часовий слот
+// @Description  Хендлер для видалення існуючого одиничного часового слоту (available time). Приймає структуру з ID слоту, який потрібно видалити, у тілі запиту. ID користувача використовується для перевірки прав доступу/власності на послугу.
+// @Tags         Послуга
+// @Accept       json
+// @Produce      json
+// @Param        availableTime  body     models.DeleteAvailableTime  true  "Дані для видалення доступного часового слоту (повинно містити ID слоту)"
+// @Success      200            {object} map[string]string "Запис про доступний час успішно видалено"
+// @Failure      400            {object} map[string]string  "Помилка вхідних даних (невірний формат JSON)"
+// @Failure      500            {object} map[string]string  "Помилка сервера (неможливо отримати ID користувача, помилка видалення запису в базі даних або відсутність прав)"
+// @Security     BearerAuth
+// @Router       /api/service/availabletime [delete]
 func (h *Handler) DeleteAvailableTime(c *gin.Context) {
 	var availableTime models.DeleteAvailableTime
 	if err := c.BindJSON(&availableTime); err != nil {
