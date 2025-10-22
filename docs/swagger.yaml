@@ -2,7 +2,16 @@ basePath: /
 definitions:
   models.Available_for:
     properties:
-      serviceID:
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  models.Available_for_Info:
+    properties:
+      id:
+        type: integer
+      name:
         type: string
       user_id:
         type: string
@@ -21,12 +30,50 @@ definitions:
     - time_end
     - time_start
     type: object
+  models.Available_time_Info:
+    properties:
+      booked:
+        type: boolean
+      id:
+        type: integer
+      time_end:
+        type: string
+      time_start:
+        type: string
+    type: object
+  models.DeleteAvailableFor:
+    properties:
+      id:
+        type: integer
+    required:
+    - id
+    type: object
+  models.DeleteAvailableTime:
+    properties:
+      id:
+        type: integer
+    required:
+    - id
+    type: object
   models.DoneRecord:
     properties:
       id:
         type: string
     required:
     - id
+    type: object
+  models.FullServiceInformation:
+    properties:
+      available_for:
+        items:
+          $ref: '#/definitions/models.Available_for_Info'
+        type: array
+      available_time:
+        items:
+          $ref: '#/definitions/models.Available_time_Info'
+        type: array
+      service:
+        $ref: '#/definitions/models.ServiceInformation'
     type: object
   models.MassageType:
     properties:
@@ -49,6 +96,8 @@ definitions:
         type: string
       id:
         type: string
+      massage_type:
+        type: string
       name:
         type: string
       performer:
@@ -64,6 +113,29 @@ definitions:
         type: integer
       offset:
         type: integer
+    type: object
+  models.NewAvailableFor:
+    properties:
+      service_id:
+        type: string
+      user_id:
+        type: string
+    required:
+    - service_id
+    - user_id
+    type: object
+  models.NewAvailableTime:
+    properties:
+      service_id:
+        type: string
+      time_end:
+        type: string
+      time_start:
+        type: string
+    required:
+    - service_id
+    - time_end
+    - time_start
     type: object
   models.NewPromoService:
     properties:
@@ -161,6 +233,8 @@ definitions:
         type: string
       for_all:
         type: boolean
+      massage_type:
+        type: integer
       name:
         type: string
       service_type:
@@ -184,6 +258,25 @@ definitions:
         type: string
     required:
     - id
+    type: object
+  models.ServiceInformation:
+    properties:
+      available_for_all:
+        type: boolean
+      date:
+        type: string
+      date_end:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      massage_type_id:
+        type: integer
+      name:
+        type: string
+      service_type_id:
+        type: integer
     type: object
   models.ServiceType:
     properties:
@@ -221,6 +314,8 @@ definitions:
         type: string
       done:
         type: boolean
+      massage_type:
+        type: string
       performer:
         type: string
       record_id:
@@ -417,6 +512,42 @@ paths:
       summary: Завершення запису
       tags:
       - Запис на послугу
+  /api/service/{serviceid}:
+    get:
+      consumes:
+      - application/json
+      description: Хендлер для отримання детальної інформації про конкретну послугу
+        за її ID. ID послуги передається як параметр маршруту.
+      parameters:
+      - description: ID послуги (UUID)
+        in: path
+        name: serviceid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Повна інформація про послугу
+          schema:
+            $ref: '#/definitions/models.FullServiceInformation'
+        "400":
+          description: Некоректний формат ID послуги (невалідна UUID)
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера (наприклад, помилка отримання даних)
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Отримання повної інформації про послугу
+      tags:
+      - Послуга
   /api/service/activate_promo:
     post:
       consumes:
@@ -487,45 +618,167 @@ paths:
       summary: Отримання доступних послуг
       tags:
       - Послуга
-  /api/service/availabletime:
-    post:
+  /api/service/availablefor:
+    delete:
       consumes:
       - application/json
-      description: Хендлер для отримання доступного часу для конкретної послуги. Приймає
-        структуру з ID послуги в тілі запиту.
+      description: Хендлер для видалення існуючого запису про доступний час для певної
+        послуги. Приймає структуру з ID запису, який потрібно видалити, у тілі запиту.
+        ID користувача використовується для перевірки прав доступу/власності.
       parameters:
-      - description: Дані для отримання доступного часу послуги
+      - description: Дані для видалення доступного часу (повинно містити ID запису)
         in: body
-        name: serviceID
+        name: availableFor
         required: true
         schema:
-          $ref: '#/definitions/models.ServiceAvailableTimeInput'
+          $ref: '#/definitions/models.DeleteAvailableFor'
       produces:
       - application/json
       responses:
         "200":
-          description: Список доступного часу для послуги
+          description: Запис про доступний час успішно видалено
           schema:
-            items:
-              additionalProperties: true
-              type: object
-            type: array
+            additionalProperties:
+              type: string
+            type: object
         "400":
-          description: Помилка запиту
+          description: Помилка вхідних даних (невірний формат JSON)
           schema:
             additionalProperties:
               type: string
             type: object
         "500":
-          description: Помилка сервера
+          description: Помилка сервера (неможливо отримати ID користувача, помилка
+            видалення запису в базі даних або відсутність прав)
           schema:
             additionalProperties:
               type: string
             type: object
       security:
       - BearerAuth: []
-      - ApiKeyAuth: []
-      summary: Отримання доступного часу для послуги
+      summary: Видалення запису про доступний час/вікно
+      tags:
+      - Послуга
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для створення нового запису про доступний час (вікно) для
+        певної послуги. Приймає структуру з даними про час і послугу. ID користувача
+        використовується для перевірки прав доступу/власності.
+      parameters:
+      - description: Дані про новий доступний час (наприклад, дата, час початку/кінця,
+          ID послуги)
+        in: body
+        name: availableFor
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewAvailableFor'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успішне створення запису
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Помилка вхідних даних (невірний формат JSON)
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера (неможливо отримати ID користувача, або помилка
+            при створенні запису в базі даних)
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Додавання нового доступного часу/вікна для послуги
+      tags:
+      - Послуга
+  /api/service/availabletime:
+    delete:
+      consumes:
+      - application/json
+      description: Хендлер для видалення існуючого одиничного часового слоту (available
+        time). Приймає структуру з ID слоту, який потрібно видалити, у тілі запиту.
+        ID користувача використовується для перевірки прав доступу/власності на послугу.
+      parameters:
+      - description: Дані для видалення доступного часового слоту (повинно містити
+          ID слоту)
+        in: body
+        name: availableTime
+        required: true
+        schema:
+          $ref: '#/definitions/models.DeleteAvailableTime'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Запис про доступний час успішно видалено
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Помилка вхідних даних (невірний формат JSON)
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера (неможливо отримати ID користувача, помилка
+            видалення запису в базі даних або відсутність прав)
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Видалення запису про доступний часовий слот
+      tags:
+      - Послуга
+    post:
+      consumes:
+      - application/json
+      description: Хендлер для створення нового запису про доступний час (одиничний
+        слот) для певної послуги. Приймає структуру з даними слоту. ID користувача
+        використовується для перевірки прав доступу/власності на послугу.
+      parameters:
+      - description: Дані про новий доступний часовий слот (наприклад, ID послуги,
+          час початку/кінця)
+        in: body
+        name: availableTime
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewAvailableTime'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успішне створення часового слоту
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Помилка вхідних даних (невірний формат JSON)
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера (неможливо отримати ID користувача, або помилка
+            при створенні запису в базі даних)
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Додавання нового доступного часу для послуги (одиничний слот)
       tags:
       - Послуга
   /api/service/create:
@@ -634,7 +887,7 @@ paths:
       consumes:
       - application/json
       description: Хендлер для видалення послуги. Приймає структуру ServiceDelete.
-        Перевіряє, чи користувач є адміністратором або власником послуги.
+        Перевіряє, чи є користувачвласником послуги.
       parameters:
       - description: Дані для видалення послуги
         in: body
@@ -666,6 +919,48 @@ paths:
       - BearerAuth: []
       - ApiKeyAuth: []
       summary: Видалення послуги
+      tags:
+      - Послуга
+  /api/service/edit:
+    put:
+      consumes:
+      - application/json
+      description: Хендлер для оновлення детальної інформації про існуючу послугу.
+        Приймає повну структуру послуги (models.ServiceInformation) в тілі запиту.
+        Користувач повинен бути автентифікований, а його ID використовується для перевірки
+        прав доступу.
+      parameters:
+      - description: Дані послуги для оновлення. Повинен містити ID послуги.
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/models.ServiceInformation'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Послугу успішно оновлено
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Помилка вхідних даних (невірний формат JSON)
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Помилка сервера (неможливо отримати ID користувача, або помилка
+            оновлення послуги в базі даних)
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Редагування існуючої послуги
       tags:
       - Послуга
   /api/service/getmassagetypes:

@@ -136,8 +136,28 @@ func (s *OfferingService) UpdateService(service models.ServiceUpdate) error {
 	return s.repo.UpdateService(service)
 }
 
-func (s *OfferingService) DeleteService(id uuid.UUID) error {
+func (s *OfferingService) DeleteService(id uuid.UUID, user uuid.UUID) error {
+	owner, err := s.repo.GetServiceOwner(id)
+	if err != nil {
+		s.logger.Warn(err)
+	}
+	if owner != user {
+
+		return fmt.Errorf("you are not owner of this service")
+	}
+
+	info, err := s.repo.GetFullServiceInfo(id)
+	if err != nil {
+		s.logger.Warn(err)
+	}
+	for _, value := range info.Available_time_Info {
+		if value.Booked == true {
+			return fmt.Errorf("this service has already booked appointments(termins)")
+		}
+	}
+
 	return s.repo.DeleteService(id)
+
 }
 
 func (s *OfferingService) GetTypes() ([]models.ServiceType, error) {
@@ -225,8 +245,8 @@ func (s *OfferingService) NewAvailableTime(at models.NewAvailableTime, user uuid
 	}
 }
 
-func (s *OfferingService) DeleteAvailableTime(at models.DeleteAvailableTime, user uuid.UUID) error{
- return s.repo.DeleteAvailableTime(at, user)
+func (s *OfferingService) DeleteAvailableTime(at models.DeleteAvailableTime, user uuid.UUID) error {
+	return s.repo.DeleteAvailableTime(at, user)
 }
 
 func (s *OfferingService) NewAvailableFor(af models.NewAvailableFor, user uuid.UUID) (int, error) {
@@ -241,8 +261,7 @@ func (s *OfferingService) NewAvailableFor(af models.NewAvailableFor, user uuid.U
 	}
 }
 
-
-func (s *OfferingService) DeleteAvailableFor(af models.DeleteAvailableFor, user uuid.UUID) error{
+func (s *OfferingService) DeleteAvailableFor(af models.DeleteAvailableFor, user uuid.UUID) error {
 	return s.repo.DeleteAvailableFor(af, user)
 }
 
