@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"terminer/internal/models"
 	"time"
@@ -319,15 +320,19 @@ group by 1`
 
 }
 
-func (r *OfferingPostgres) ActivatePromoCode(service_id uuid.UUID, user_id uuid.UUID) error {
-	query := `insert into main.available_for(service_id, user_id) values ($1, $2)`
+func (r *OfferingPostgres) ActivatePromoCode(serviceID uuid.UUID, userID uuid.UUID) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	_, err := r.db.Exec(query, service_id, user_id)
-	if err != nil {
-		return err
-	}
-	return nil
+	query := `
+		insert into main.available_for(service_id, user_id)
+		values ($1, $2)
+	`
+
+	_, err := r.db.ExecContext(ctx, query, serviceID, userID)
+	return err
 }
+
 
 func (r *OfferingPostgres) GetMyActualServices(user_id uuid.UUID) ([]models.MyActualService, error) {
 	query := `select dc.uuid, dc.name, dc.description, st.name as service_type, dc.date, dc.date_end, u.last_name || ' ' || u.first_name as performer,
