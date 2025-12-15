@@ -43,9 +43,6 @@ func (h *Handler) UserIdentity(c *gin.Context) {
 	c.Next()
 }
 
-/*************  ✨ Windsurf Command ⭐  *************/
-// getUserId returns user id from context. If user id is not found or it is not uuid.UUID type, it returns error.
-/*******  830e953c-5979-4def-947e-0b34eec07ef8  *******/
 func getUserId(c *gin.Context) (uuid.UUID, error) {
 	id, ok := c.Get(userCtx)
 	if !ok {
