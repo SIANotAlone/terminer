@@ -15,7 +15,7 @@ const (
 )
 
 func (h *Handler) UserIdentity(c *gin.Context) {
-	// 🔥 ВАЖНО: пропускаем preflight
+	// ✅ пропускаем preflight
 	if c.Request.Method == http.MethodOptions {
 		c.AbortWithStatus(http.StatusOK)
 		return
@@ -24,18 +24,21 @@ func (h *Handler) UserIdentity(c *gin.Context) {
 	header := c.GetHeader(authorizationHeader)
 	if header == "" {
 		NewErrorResponse(c, http.StatusUnauthorized, "empty auth header")
+		c.Abort()
 		return
 	}
 
 	headerParts := strings.Split(header, " ")
 	if len(headerParts) != 2 {
 		NewErrorResponse(c, http.StatusUnauthorized, "invalid auth header")
+		c.Abort()
 		return
 	}
 
 	userID, err := h.services.Authorization.ParseToken(headerParts[1])
 	if err != nil {
 		NewErrorResponse(c, http.StatusUnauthorized, "invalid token")
+		c.Abort()
 		return
 	}
 
