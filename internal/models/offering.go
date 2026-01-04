@@ -36,13 +36,14 @@ type NewService struct {
 	Available_for  []Available_for  `json:"available_for"`
 }
 type PromoService struct {
-	UUID        uuid.UUID `json:"-"`
-	Name        string    `json:"name" binding:"required" omitempty:"true"`
-	Description string    `json:"description" binding:"required" omitempty:"true"`
-	Date        time.Time `json:"-"`
-	DateEnd     time.Time `json:"date_end" binding:"required" omitempty:"true"`
-	ServiceType int       `json:"service_type" binding:"required" omitempty:"true"`
-	PerformerID uuid.UUID `json:"-"`
+	UUID          uuid.UUID `json:"-"`
+	Name          string    `json:"name" binding:"required" omitempty:"true"`
+	Description   string    `json:"description" binding:"required" omitempty:"true"`
+	Date          time.Time `json:"-"`
+	DateEnd       time.Time `json:"date_end" binding:"required" omitempty:"true"`
+	ServiceType   int       `json:"service_type" binding:"required" omitempty:"true"`
+	PerformerID   uuid.UUID `json:"-"`
+	MassageTypeID int       `json:"massage_type" binding:"required" omitempty:"true"`
 }
 type NewPromoService struct {
 	PromoService   PromoService     `json:"promoservice" binding:"required" omitempty:"true"`

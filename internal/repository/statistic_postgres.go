@@ -452,7 +452,7 @@ SELECT
 	(select count(*) from main.comment c
 		left join main.record r on r.uuid = c.record_id
 		left join main.service s on s.uuid = r.service_id
-		where performer_id = vars.uid  AND EXTRACT(YEAR FROM (now() AT TIME ZONE 'UTC')) = (SELECT year FROM vars)
+		where performer_id = vars.uid  AND EXTRACT(YEAR FROM (c.timestamp)) = (SELECT year FROM vars)
 	) as comments_in_userservices
 	
 FROM vars;
