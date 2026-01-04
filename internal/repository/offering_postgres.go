@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"context"
 	"fmt"
 	"terminer/internal/models"
 	"time"
@@ -246,8 +245,8 @@ BEGIN
     RETURN result;
 END;
 $$ LANGUAGE plpgsql;`)
-	create_service_query := fmt.Sprintf(`INSERT INTO %s (name, description, date, date_end, service_type_id, performer_id,  promocode) VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, generate_promo_code(10)) RETURNING uuid`, servicesTable)
-	row := tx.QueryRow(create_service_query, offering.PromoService.Name, offering.PromoService.Description, offering.PromoService.DateEnd, offering.PromoService.ServiceType, offering.PromoService.PerformerID)
+	create_service_query := fmt.Sprintf(`INSERT INTO %s (name, description, date, date_end, service_type_id, performer_id,  promocode, massage_type_id) VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, generate_promo_code(10), $6) RETURNING uuid`, servicesTable)
+	row := tx.QueryRow(create_service_query, offering.PromoService.Name, offering.PromoService.Description, offering.PromoService.DateEnd, offering.PromoService.ServiceType, offering.PromoService.PerformerID, offering.PromoService.MassageTypeID)
 	if err := row.Scan(&id); err != nil {
 		tx.Rollback()
 		return id, err
@@ -320,19 +319,15 @@ group by 1`
 
 }
 
-func (r *OfferingPostgres) ActivatePromoCode(serviceID uuid.UUID, userID uuid.UUID) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+func (r *OfferingPostgres) ActivatePromoCode(service_id uuid.UUID, user_id uuid.UUID) error {
+	query := `insert into main.available_for(service_id, user_id) values ($1, $2)`
 
-	query := `
-		insert into main.available_for(service_id, user_id)
-		values ($1, $2)
-	`
-
-	_, err := r.db.ExecContext(ctx, query, serviceID, userID)
-	return err
+	_, err := r.db.Exec(query, service_id, user_id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
-
 
 func (r *OfferingPostgres) GetMyActualServices(user_id uuid.UUID) ([]models.MyActualService, error) {
 	query := `select dc.uuid, dc.name, dc.description, st.name as service_type, dc.date, dc.date_end, u.last_name || ' ' || u.first_name as performer,
