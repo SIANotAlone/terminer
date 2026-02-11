@@ -45,3 +45,14 @@ func (s *GoalService) DeleteGoal(userID uuid.UUID, goalID uuid.UUID) error {
 func (s *GoalService) GetAvailableGoals(userID uuid.UUID) ([]models.Goal, error) {
 	return s.repo.GetAvailableGoals(userID)
 }
+
+func (s *GoalService) GetGoalsTransactions(userID uuid.UUID, goalID uuid.UUID) ([]models.GoalTransaction, error) {
+	GoalOwner, err := s.repo.GetGoalOwnerID(goalID)
+	if err != nil {
+		return nil, err
+	}
+	if GoalOwner != userID {
+		return nil, fmt.Errorf("user is not the owner of the goal")
+	}
+	return s.repo.GetGoalsTransactions(goalID)
+}

@@ -9,7 +9,6 @@ import (
 
 type NewTransaction struct {
 	BudgetID   uuid.UUID       `json:"budget_id"`
-	UserID     uuid.UUID       `*`
 	CategoryID uuid.UUID       `json:"category_id"`
 	GoalID     *uuid.UUID      `json:"goal_id"`
 	Amount     decimal.Decimal `json:"amount"`
@@ -21,7 +20,6 @@ type NewTransaction struct {
 type UpdateTransaction struct {
 	TransactionID uuid.UUID       `json:"transaction_id"`
 	CategoryID    uuid.UUID       `json:"category_id"`
-	GoalID        *uuid.UUID      `json:"goal_id"`
 	Amount        decimal.Decimal `json:"amount"`
 	Intent        string          `json:"intent"`
 	Direction     string          `json:"direction"`
@@ -44,4 +42,3 @@ type Transaction struct {
 type TransactionID struct {
 	ID uuid.UUID `json:"id" binding:"required" omitempty:"true"`
 }
-

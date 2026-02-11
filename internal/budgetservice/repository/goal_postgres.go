@@ -19,12 +19,14 @@ func NewGoalPostgres(db *sqlx.DB) *GoalPostgres {
 
 func (r *GoalPostgres) CreateGoal(userID uuid.UUID, goal models.NewGoal) (uuid.UUID, error) {
 	query := `insert into budget.accumulation_goals (user_id,target_name, target_amount, target_date, currency_id)
-values ($1, $2, $3, $4, $5);`
-	_, err := r.db.Exec(query, userID, goal.TargetName, goal.TargetAmount, goal.TargetDate, goal.CurrencyID)
+values ($1, $2, $3, $4, $5) returning uuid;`
+	var goalID uuid.UUID
+	err := r.db.QueryRow(query, userID, goal.TargetName, goal.TargetAmount, goal.TargetDate, goal.CurrencyID).Scan(&goalID)
 	if err != nil {
 		return uuid.Nil, err
 	}
-	return uuid.New(), nil
+
+	return goalID, nil
 }
 
 func (r *GoalPostgres) UpdateGoal(goal models.UpdateGoal) error {
@@ -92,4 +94,32 @@ func (r *GoalPostgres) GetGoalOwnerID(goalID uuid.UUID) (uuid.UUID, error) {
 		return uuid.Nil, err
 	}
 	return ownerID, nil
+}
+
+func (r *GoalPostgres) GetGoalsTransactions(goalID uuid.UUID) ([]models.GoalTransaction, error) {
+	query := `select dc.transaction_id as id, b.name as budget, u.first_name || ' ' || u.last_name as user, c.name as category, dc.amount, 
+dc.date, dc.date_update, dc.intent, dc.direction, dc.comment
+from budget.transactions dc
+left join budget.budgets b on b.uuid = dc.budget_id 
+left join budget.categories c on c.uuid = dc.category_id
+left join main.user u on u.uuid = dc.user_id
+where dc.goal_id = $1;`
+
+	rows, err := r.db.Query(query, goalID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var transactions []models.GoalTransaction
+	for rows.Next() {
+		var transaction models.GoalTransaction
+		err := rows.Scan(&transaction.TransactionID, &transaction.Budget, &transaction.User, &transaction.Category, &transaction.Amount,
+			&transaction.Date, &transaction.DateUpdate, &transaction.Intent, &transaction.Direction, &transaction.Comment)
+		if err != nil {
+			return nil, err
+		}
+		transactions = append(transactions, transaction)
+	}
+	return transactions, nil
 }

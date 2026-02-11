@@ -37,3 +37,16 @@ type Goal struct {
 type GoalID struct {
 	ID uuid.UUID `json:"id"`
 }
+
+type GoalTransaction struct {
+	TransactionID uuid.UUID       `json:"transaction_id"`
+	Budget string          `json:"budget"`
+	User string          `json:"user"`
+	Category string          `json:"category"`
+	Amount decimal.Decimal `json:"amount"`
+	Date time.Time       `json:"date"`
+	DateUpdate time.Time       `json:"date_update"`
+	Intent string          `json:"intent"`
+	Direction string          `json:"direction"`
+	Comment string          `json:"comment"`
+}

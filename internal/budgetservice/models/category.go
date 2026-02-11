@@ -10,14 +10,14 @@ type NewCategory struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	UserID      string `*`
-	Type        int    `json:"type"`
+	Type        string `json:"type"`
 }
 
 type UpdateCategory struct {
 	ID          uuid.UUID `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
-	Type        int       `json:"type"`
+	Type        string    `json:"type"`
 }
 
 type Category struct {

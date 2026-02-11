@@ -8,8 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-
-
 type BudgetService struct {
 	repo repository.Budget
 }
@@ -22,11 +20,17 @@ func (s *BudgetService) CreateBudget(userID uuid.UUID, budget models.NewBudget) 
 	return s.repo.CreateBudget(userID, budget)
 }
 
-func (s *BudgetService) GetAvailableBudgets(userID uuid.UUID) ([]models.Budget, error) {
+func (s *BudgetService) GetAvailableBudgets(userID uuid.UUID, archived bool, limit int, offset int) ([]models.Budget, error) {
+	if archived {
+		// Если нужны архивные — вызываем новый метод с пагинацией
+		return s.repo.GetAvailableBudgetsWithArchived(userID, limit, offset)
+	}
+
+	// По умолчанию — старое поведение (только активные)
 	return s.repo.GetAvailableBudgets(userID)
 }
 func (s *BudgetService) UpdateBudget(userID uuid.UUID, budget models.UpdateBudget) error {
-	BudgetOwner , err := s.repo.GetBudgetOwnerID(budget.ID)
+	BudgetOwner, err := s.repo.GetBudgetOwnerID(budget.ID)
 	if err != nil {
 		return err
 	}
@@ -36,7 +40,7 @@ func (s *BudgetService) UpdateBudget(userID uuid.UUID, budget models.UpdateBudge
 	return s.repo.UpdateBudget(userID, budget)
 }
 func (s *BudgetService) DeleteBudget(userID uuid.UUID, budgetID uuid.UUID) error {
-	BudgetOwner , err := s.repo.GetBudgetOwnerID(budgetID)
+	BudgetOwner, err := s.repo.GetBudgetOwnerID(budgetID)
 	if err != nil {
 		return err
 	}
@@ -46,7 +50,7 @@ func (s *BudgetService) DeleteBudget(userID uuid.UUID, budgetID uuid.UUID) error
 	return s.repo.DeleteBudget(userID, budgetID)
 }
 func (s *BudgetService) ArchiveBudget(userID uuid.UUID, budgetID uuid.UUID) error {
-	OwnerID , err := s.repo.GetBudgetOwnerID(budgetID)
+	OwnerID, err := s.repo.GetBudgetOwnerID(budgetID)
 	if err != nil {
 		return err
 	}
@@ -56,7 +60,7 @@ func (s *BudgetService) ArchiveBudget(userID uuid.UUID, budgetID uuid.UUID) erro
 	return s.repo.ArchiveBudget(userID, budgetID)
 }
 func (s *BudgetService) UnArchiveBudget(userID uuid.UUID, budgetID uuid.UUID) error {
-	OwnerID , err := s.repo.GetBudgetOwnerID(budgetID)
+	OwnerID, err := s.repo.GetBudgetOwnerID(budgetID)
 	if err != nil {
 		return err
 	}
@@ -72,4 +76,8 @@ func (s *BudgetService) GetBudgetTypes() ([]models.BudgetType, error) {
 
 func (s *BudgetService) GetBudgetOwnerID(budgetID uuid.UUID) (uuid.UUID, error) {
 	return s.repo.GetBudgetOwnerID(budgetID)
+}
+
+func (s *BudgetService) GetCurrencies() ([]models.Currency, error) {
+	return s.repo.GetCurrencies()
 }

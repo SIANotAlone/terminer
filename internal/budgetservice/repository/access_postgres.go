@@ -15,11 +15,13 @@ func NewAccessPostgres(db *sqlx.DB) *AccessPostgres {
 	return &AccessPostgres{db: db}
 }
 
-func (r *AccessPostgres) ShareBudget(budgetID uuid.UUID, target_user uuid.UUID) error {
+func (r *AccessPostgres) ShareBudget(budgetID uuid.UUID, target_user uuid.UUID) (uuid.UUID, error) {
 	query := `insert into budget.access(user_id, budget_id) 
-values ($1, $2);`
-	_, err := r.db.Exec(query, target_user, budgetID)
-	return err
+values ($1, $2)
+returning uuid;`
+	var accessID uuid.UUID
+	err := r.db.Get(&accessID, query, target_user, budgetID)
+	return accessID, err
 }
 
 func (r *AccessPostgres) RevokeAccess(access_id uuid.UUID) error {
@@ -73,4 +75,30 @@ func (r *AccessPostgres) GetBudgetOwnerID(budgetID uuid.UUID) (uuid.UUID, error)
 	var ownerID uuid.UUID
 	err := r.db.Get(&ownerID, query, budgetID)
 	return ownerID, err
+}
+
+
+func (r *AccessPostgres) HasUserAccessToBudget(userID uuid.UUID, budgetID uuid.UUID) (bool, error) {
+	query := `SELECT EXISTS (
+    SELECT 1 
+    FROM budget.budgets b
+    -- Используем LEFT JOIN, так как записи в access может не быть (если пользователь владелец)
+    LEFT JOIN budget.access a ON b.uuid = a.budget_id 
+    WHERE b.uuid = $1 -- ID бюджета
+      AND (
+          b.owner_id = $2 -- Проверка: пользователь — владелец
+          OR 
+          a.user_id = $2  -- ИЛИ Проверка: пользователю предоставлен доступ
+      )
+);`
+	var hasAccess bool
+	err := r.db.Get(&hasAccess, query, budgetID, userID)
+	return hasAccess, err
+}
+
+func (r *AccessPostgres) GetBudgetIDByAccessID(accessID uuid.UUID) (uuid.UUID, error) {
+	query := `select budget_id from budget.access where uuid = $1;`
+	var budgetID uuid.UUID
+	err := r.db.Get(&budgetID, query, accessID)
+	return budgetID, err
 }

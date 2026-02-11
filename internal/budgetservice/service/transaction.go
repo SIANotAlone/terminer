@@ -23,27 +23,23 @@ func (s *TransactionService) CreateTransaction(userID uuid.UUID, transaction mod
 }
 
 func (s *TransactionService) UpdateTransaction(userID uuid.UUID, transaction models.UpdateTransaction) error {
-	if transaction.CategoryID != uuid.Nil {
-		old_amount, err := s.repo.GetTransactionAmountByID(transaction.TransactionID)
-		if err != nil {
-			return err
-		}
-		return s.repo.UpdateTransactionWithGoal(transaction, old_amount)
-	}
-	return s.repo.UpdateTransactionWithoutGoal(transaction)
-}
-
-func (s *TransactionService) DeleteTransaction(userID uuid.UUID, transactionID uuid.UUID) error {
-	hasGoal, err := s.repo.TransactionHasGoal(transactionID)
+	// 1. Получаем старую сумму для пересчета баланса (цели или бюджета)
+	oldAmount, err := s.repo.GetTransactionAmountByID(transaction.TransactionID)
 	if err != nil {
 		return err
 	}
-	if hasGoal {
-		return s.repo.DeleteTransactionWithGoal(transactionID)
-	}
-	return s.repo.DeleteTransactionWithoutGoal(transactionID)
+
+	// 2. Просто обновляем. Репозиторий сам разберется с goal_id через RETURNING.
+	return s.repo.UpdateTransaction(transaction, oldAmount)
+}
+func (s *TransactionService) DeleteTransaction(userID uuid.UUID, transactionID uuid.UUID) error {
+	return s.repo.DeleteTransaction(transactionID)
 }
 
 func (s *TransactionService) GetTransactionsByBudget(userID uuid.UUID, budgetID uuid.UUID) ([]models.Transaction, error) {
 	return s.repo.GetTransactionsByBudget(budgetID)
+}
+
+func (s *TransactionService) GetBudgetIdByTransactionID(transactionID uuid.UUID) (uuid.UUID, error) {
+	return s.repo.GetBudgetIdByTransactionID(transactionID)
 }

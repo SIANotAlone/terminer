@@ -4,15 +4,20 @@ import (
 	"terminer/internal/budgetservice/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/google/uuid"
 )
 
 func (h *Handler) CreateTransaction(c *gin.Context) {
 	var input models.NewTransaction
-	if err := c.BindJSON(&input); err != nil {
+
+	// ВАЖНО: Заменяем c.BindJSON(&input) на ShouldBindBodyWith
+	// binding.JSON нужно импортировать из "github.com/gin-gonic/gin/binding"
+	if err := c.ShouldBindBodyWith(&input, binding.JSON); err != nil {
 		NewErrorResponse(c, 400, err.Error())
 		return
 	}
+
 	user_id, err := getUserId(c)
 	if err != nil {
 		NewErrorResponse(c, 500, err.Error())
@@ -33,7 +38,7 @@ func (h *Handler) CreateTransaction(c *gin.Context) {
 
 func (h *Handler) UpdateTransaction(c *gin.Context) {
 	var input models.UpdateTransaction
-	if err := c.BindJSON(&input); err != nil {
+	if err := c.ShouldBindBodyWith(&input, binding.JSON); err != nil {
 		NewErrorResponse(c, 400, err.Error())
 		return
 	}
@@ -53,24 +58,28 @@ func (h *Handler) UpdateTransaction(c *gin.Context) {
 }
 
 func (h *Handler) DeleteTransaction(c *gin.Context) {
-	var deleteID models.TransactionID
-	if err := c.BindJSON(&deleteID); err != nil {
-		NewErrorResponse(c, 400, err.Error())
-		return
-	}
-	user_id, err := getUserId(c)
-	if err != nil {
-		NewErrorResponse(c, 500, err.Error())
-		return
-	}
+    // Читаем ID из URL: /api/transactions/:id
+    idStr := c.Param("id") 
+    transactionID, err := uuid.Parse(idStr)
+    if err != nil {
+        NewErrorResponse(c, 400, "invalid transaction id format")
+        return
+    }
 
-	if err := h.services.Transaction.DeleteTransaction(user_id, deleteID.ID); err != nil {
-		NewErrorResponse(c, 500, err.Error())
-		return
-	}
-	c.JSON(200, map[string]interface{}{
-		"message": "ok",
-	})
+    user_id, err := getUserId(c)
+    if err != nil {
+        NewErrorResponse(c, 500, err.Error())
+        return
+    }
+
+    if err := h.services.Transaction.DeleteTransaction(user_id, transactionID); err != nil {
+        NewErrorResponse(c, 500, err.Error())
+        return
+    }
+
+    c.JSON(200, map[string]interface{}{
+        "message": "ok",
+    })
 }
 
 func (h *Handler) GetTransactionsByBudget(c *gin.Context) {

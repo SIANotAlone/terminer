@@ -11,7 +11,7 @@ type NewBudget struct {
 	Type          int       `json:"type" binding:"required" omitempty:"true"`
 	Date_Start    time.Time `json:"date_start" binding:"required" omitempty:"true"`
 	Date_End      time.Time `json:"date_end" binding:"required" omitempty:"true"`
-	Base_Currency string    `json:"base_currency" binding:"required" omitempty:"true"`
+	Base_Currency int       `json:"base_currency" binding:"required" omitempty:"true"`
 }
 
 type BudgetType struct {
@@ -22,7 +22,7 @@ type BudgetType struct {
 
 type Budget struct {
 	ID            uuid.UUID `json:"id"`
-	Owner         uuid.UUID `json:"owner"`
+	Owner         string    `json:"owner"`
 	Name          string    `json:"name"`
 	Type          string    `json:"type"`
 	Date          time.Time `json:"date"`
@@ -30,7 +30,7 @@ type Budget struct {
 	Date_End      time.Time `json:"date_end"`
 	CurrencyCode  string    `json:"currency_code"`
 	Base_Currency string    `json:"base_currency"`
-	Is_Archived   bool      `*`
+	Is_Archived   bool      `json:"is_archived"`
 }
 
 type UpdateBudget struct {
@@ -44,4 +44,11 @@ type UpdateBudget struct {
 
 type BudgetID struct {
 	ID uuid.UUID `json:"id" binding:"required" omitempty:"true"`
+}
+
+type Currency struct {
+	ID     int    `json:"id"`
+	Code   string `json:"code"`
+	Symbol string `json:"symbol"`
+	Name   string `json:"name"`
 }

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"strconv"
 	"terminer/internal/budgetservice/models"
 
 	"github.com/gin-gonic/gin"
@@ -67,22 +68,32 @@ func (h *Handler) DeleteBudget(c *gin.Context) {
 		NewErrorResponse(c, 500, err.Error())
 		return
 	}
+	c.JSON(200, map[string]interface{}{
+		"message": "ok",
+	})
 }
 
 func (h *Handler) GetAvailableBudgets(c *gin.Context) {
-	user_id, err := getUserId(c)
-	if err != nil {
-		NewErrorResponse(c, 500, err.Error())
-		return
-	}
+    user_id, err := getUserId(c)
+    if err != nil {
+        NewErrorResponse(c, 401, "unauthorized") // 401 лучше подходит для ошибок ID пользователя
+        return
+    }
 
-	budgets, err := h.services.Budget.GetAvailableBudgets(user_id)
-	if err != nil {
-		NewErrorResponse(c, 500, err.Error())
-		return
-	}
+    // Читаем параметры из запроса
+    // Пример: /api/budget?limit=10&offset=0&archived=true
+    limit, _ := strconv.Atoi(c.DefaultQuery("limit", "0"))
+    offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
+    archived, _ := strconv.ParseBool(c.DefaultQuery("archived", "false"))
 
-	c.JSON(200, budgets)
+    // Вызываем обновленный сервис
+    budgets, err := h.services.Budget.GetAvailableBudgets(user_id, archived, limit, offset)
+    if err != nil {
+        NewErrorResponse(c, 500, err.Error())
+        return
+    }
+
+    c.JSON(200, budgets)
 }
 
 func (h *Handler) ArchiveBudget(c *gin.Context) {
@@ -135,4 +146,14 @@ func (h *Handler) GetBudgetTypes(c *gin.Context) {
 	}
 
 	c.JSON(200, budgetTypes)
+}
+
+func (h *Handler) GetCurrencies(c *gin.Context) {
+	currencies, err := h.services.Budget.GetCurrencies()
+	if err != nil {
+		NewErrorResponse(c, 500, err.Error())
+		return
+	}
+
+	c.JSON(200, currencies)
 }

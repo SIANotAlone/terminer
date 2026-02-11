@@ -29,6 +29,7 @@ func (h *Handler) InitRoutes(router *gin.Engine) {
 			budget.PUT("/archive", h.ArchiveBudget)
 			budget.PUT("/unarchive", h.UnArchiveBudget)
 			budget.GET("/types", h.GetBudgetTypes)
+			budget.GET("/currencies", h.GetCurrencies)
 		}
 
 		goal := api.Group("/goal")
@@ -37,13 +38,14 @@ func (h *Handler) InitRoutes(router *gin.Engine) {
 			goal.PUT("/update", h.UpdateGoal)
 			goal.DELETE("/delete", h.DeleteGoal)
 			goal.GET("/getavailablegoals", h.GetAvailableGoals)
+			goal.GET("/getgoalstransactions/:goalid", h.GetGoalsTransactions)
 
 		}
-		transaction := api.Group("/transaction")
+		transaction := api.Group("/transaction", h.BudgetAccess)
 		{
 			transaction.POST("/create", h.CreateTransaction)
 			transaction.PUT("/update", h.UpdateTransaction)
-			transaction.DELETE("/delete", h.DeleteTransaction)
+			transaction.DELETE("/delete/:id", h.DeleteTransaction)
 			transaction.GET("/getbybudget/:budgetid", h.GetTransactionsByBudget)
 		}
 
@@ -59,12 +61,11 @@ func (h *Handler) InitRoutes(router *gin.Engine) {
 		{
 			access.POST("/sharebudget", h.ShareBudget)
 			access.DELETE("/revokeaccess", h.RevokeAccess)
-			access.GET("/getbudgetaccesslist", h.GetBudgetAccessList)
+			access.GET("/getbudgetaccesslist", h.GetBudgetAccessList) //не используем
 			access.GET("/getallusers", h.GetAllUsers)
 			access.GET("/getbudgetusers/:budgetid", h.GetBudgetUsers)
 		}
 
-		
 	}
 
 }

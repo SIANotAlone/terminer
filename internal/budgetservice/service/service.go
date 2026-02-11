@@ -19,9 +19,10 @@ type Budget interface {
 	ArchiveBudget(userID uuid.UUID, budgetID uuid.UUID) error
 	UnArchiveBudget(userID uuid.UUID, budgetID uuid.UUID) error
 
-	GetAvailableBudgets(userID uuid.UUID) ([]models.Budget, error)
+	GetAvailableBudgets(userID uuid.UUID, archived bool, limit int, offset int) ([]models.Budget, error)
 	GetBudgetTypes() ([]models.BudgetType, error)
 	GetBudgetOwnerID(budgetID uuid.UUID) (uuid.UUID, error)
+	GetCurrencies() ([]models.Currency, error)
 }
 
 type Goal interface {
@@ -30,6 +31,7 @@ type Goal interface {
 	DeleteGoal(userID uuid.UUID, goalID uuid.UUID) error
 
 	GetAvailableGoals(userID uuid.UUID) ([]models.Goal, error)
+	GetGoalsTransactions(userID uuid.UUID, goalID uuid.UUID) ([]models.GoalTransaction, error)
 }
 
 type Transaction interface {
@@ -38,6 +40,7 @@ type Transaction interface {
 	DeleteTransaction(userID uuid.UUID, transactionID uuid.UUID) error
 
 	GetTransactionsByBudget(userID uuid.UUID, budgetID uuid.UUID) ([]models.Transaction, error)
+	GetBudgetIdByTransactionID(transactionID uuid.UUID) (uuid.UUID, error)
 }
 type Category interface {
 	CreateCategory(userID uuid.UUID, category models.NewCategory) (uuid.UUID, error)
@@ -48,11 +51,13 @@ type Category interface {
 }
 
 type Access interface {
-	ShareBudget(userID uuid.UUID, budgetID uuid.UUID, target_user uuid.UUID) error
+	ShareBudget(userID uuid.UUID, budgetID uuid.UUID, target_user uuid.UUID) (uuid.UUID, error)
 	RevokeAccess(ownerID uuid.UUID, access_id uuid.UUID) error
 
 	GetBudgetAccessList(userID uuid.UUID, budgetID uuid.UUID) ([]models.BudgetAccess, error)
 	GetAllUsers() ([]models.User, error)
+
+	HasUserAccessToBudget(userID uuid.UUID, budgetID uuid.UUID) (bool, error)
 }
 
 type Service struct {

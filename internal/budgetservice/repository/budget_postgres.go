@@ -32,7 +32,7 @@ func (r *BudgetPostgres) UpdateBudget(userID uuid.UUID, budget models.UpdateBudg
 	query := `update budget.budgets 
 set name= $1,type= $2, date_start=$3, date_end=$4, base_currency=$5
 where uuid =$6;`
-	_, err := r.db.Exec(query, budget.Name, budget.TypeID, budget.Date_Start, budget.Date_End, budget.Base_CurrencyID, userID)
+	_, err := r.db.Exec(query, budget.Name, budget.TypeID, budget.Date_Start, budget.Date_End, budget.Base_CurrencyID, budget.ID)
 	if err != nil {
 		return err
 	}
@@ -75,10 +75,11 @@ WHERE uuid = $1;`
 
 func (r *BudgetPostgres) GetAvailableBudgets(userID uuid.UUID) ([]models.Budget, error) {
 	query := `
-SELECT b.uuid, b.name, bt.name as type, b.date, b.date_start, b.date_end, bc.code, bc.name as currency, b.archived
+SELECT b.uuid, b.name, bt.name as type, b.date, b.date_start, b.date_end, bc.code, bc.name as currency, b.archived, u.first_name || ' ' || u.last_name
 FROM budget.budgets b
 LEFT JOIN budget.budget_types bt on bt.id = b.type
 LEFT JOIN budget.currencies bc on bc.id = b.base_currency
+LEFT JOIN main.user u on u.uuid = b.owner_id
 WHERE 
     -- 1. Пользователь является владельцем
     (b.owner_id = $1 AND b.archived = false)
@@ -90,7 +91,8 @@ WHERE
         SELECT a.budget_id 
         FROM budget.access a 
         WHERE a.user_id = $1
-    )AND b.archived=false);
+    )AND b.archived=false)
+	ORDER BY b.date_start DESC;
 `
 	var budgets []models.Budget
 	var budget models.Budget
@@ -109,6 +111,53 @@ WHERE
 			&budget.CurrencyCode,
 			&budget.Base_Currency,
 			&budget.Is_Archived,
+			&budget.Owner,
+		)
+		if err != nil {
+			return nil, err
+		}
+		budgets = append(budgets, budget)
+	}
+	return budgets, nil
+}
+
+func (r *BudgetPostgres) GetAvailableBudgetsWithArchived(userID uuid.UUID, limit int, offset int) ([]models.Budget, error) {
+	query := `SELECT b.uuid, b.name, bt.name as type, b.date, b.date_start, b.date_end, bc.code, bc.name as currency, b.archived, u.first_name || ' ' || u.last_name
+FROM budget.budgets b
+LEFT JOIN budget.budget_types bt on bt.id = b.type
+LEFT JOIN budget.currencies bc on bc.id = b.base_currency
+LEFT JOIN main.user u on u.uuid = b.owner_id
+WHERE 
+    -- 1. Пользователь является владельцем
+    (b.owner_id = $1 )
+    
+    OR 
+    
+    -- 2. Бюджет расшарен пользователю через таблицу access
+    (b.uuid IN (
+        SELECT a.budget_id 
+        FROM budget.access a 
+        WHERE a.user_id = $1
+    ))
+	ORDER BY b.date_start DESC LIMIT $2 OFFSET $3;`
+	var budgets []models.Budget
+	var budget models.Budget
+	rows, err := r.db.Query(query, userID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		err := rows.Scan(
+			&budget.ID,
+			&budget.Name,
+			&budget.Type,
+			&budget.Date,
+			&budget.Date_Start,
+			&budget.Date_End,
+			&budget.CurrencyCode,
+			&budget.Base_Currency,
+			&budget.Is_Archived,
+			&budget.Owner,
 		)
 		if err != nil {
 			return nil, err
@@ -144,4 +193,22 @@ func (r *BudgetPostgres) GetBudgetOwnerID(budgetID uuid.UUID) (uuid.UUID, error)
 		return uuid.Nil, err
 	}
 	return ownerID, nil
+}
+
+func (r *BudgetPostgres) GetCurrencies() ([]models.Currency, error) {
+	query := `select id, code, symbol, name from budget.currencies;`
+	var currencies []models.Currency
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var currency models.Currency
+		err := rows.Scan(&currency.ID, &currency.Code, &currency.Symbol, &currency.Name)
+		if err != nil {
+			return nil, err
+		}
+		currencies = append(currencies, currency)
+	}
+	return currencies, nil
 }

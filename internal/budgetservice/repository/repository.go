@@ -16,10 +16,12 @@ type Budget interface {
 	UnArchiveBudget(userID uuid.UUID, budgetID uuid.UUID) error
 
 	GetAvailableBudgets(userID uuid.UUID) ([]models.Budget, error)
+	GetAvailableBudgetsWithArchived(userID uuid.UUID, limit int, offset int) ([]models.Budget, error)
 
 	GetBudgetTypes() ([]models.BudgetType, error)
 
 	GetBudgetOwnerID(budgetID uuid.UUID) (uuid.UUID, error)
+	GetCurrencies() ([]models.Currency, error)
 }
 
 type Goal interface {
@@ -29,20 +31,22 @@ type Goal interface {
 
 	GetAvailableGoals(userID uuid.UUID) ([]models.Goal, error)
 	GetGoalOwnerID(goalID uuid.UUID) (uuid.UUID, error)
+	GetGoalsTransactions(goalID uuid.UUID) ([]models.GoalTransaction, error)
 }
 
 type Transaction interface {
 	CreateTransactionWithGoal(userID uuid.UUID, transaction models.NewTransaction) (uuid.UUID, error)
 	CreateTransactionWithoutGoal(userID uuid.UUID, transaction models.NewTransaction) (uuid.UUID, error)
-	UpdateTransactionWithGoal(transaction models.UpdateTransaction, old_amount decimal.Decimal) error
-	UpdateTransactionWithoutGoal(transaction models.UpdateTransaction) error
-	DeleteTransactionWithGoal(transactionID uuid.UUID, amount decimal.Decimal, goalID uuid.UUID) error
-	DeleteTransactionWithoutGoal(transactionID uuid.UUID) error
+	UpdateTransaction(transaction models.UpdateTransaction, oldAmount decimal.Decimal) error
+	DeleteTransaction(transactionID uuid.UUID) error
 
 	GetTransactionsByBudget(budgetID uuid.UUID) ([]models.Transaction, error)
 	GetTransactionAmountByID(transactionID uuid.UUID) (decimal.Decimal, error)
 
 	HasGoal(TransactionID uuid.UUID) (bool, error)
+	GetTrasactionWihtGoalAmount(transactionID uuid.UUID) (decimal.Decimal, uuid.UUID, error)
+
+	GetBudgetIdByTransactionID(transactionID uuid.UUID) (uuid.UUID, error)
 }
 type Category interface {
 	CreateCategory(userID uuid.UUID, category models.NewCategory) (uuid.UUID, error)
@@ -54,13 +58,16 @@ type Category interface {
 }
 
 type Access interface {
-	ShareBudget(budgetID uuid.UUID, target_user uuid.UUID) error
+	ShareBudget(budgetID uuid.UUID, target_user uuid.UUID) (uuid.UUID, error)
 	RevokeAccess(access_id uuid.UUID) error
 
 	GetBudgetAccessList(budgetID uuid.UUID) ([]models.BudgetAccess, error)
 	GetAllUsers() ([]models.User, error)
 
 	GetBudgetOwnerID(budgetID uuid.UUID) (uuid.UUID, error)
+
+	HasUserAccessToBudget(userID uuid.UUID, budgetID uuid.UUID) (bool, error)
+	GetBudgetIDByAccessID(accessID uuid.UUID) (uuid.UUID, error)
 }
 
 type Repository struct {

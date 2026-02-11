@@ -4,6 +4,7 @@ import (
 	"terminer/internal/budgetservice/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func (h *Handler) CreateGoal(c *gin.Context) {
@@ -86,4 +87,26 @@ func (h *Handler) GetAvailableGoals(c *gin.Context) {
 	}
 
 	c.JSON(200, goals)
+}
+
+func (h *Handler) GetGoalsTransactions(c *gin.Context) {
+	Id_param := c.Param("goalid")
+	user_id, err := getUserId(c)
+	if err != nil {
+		NewErrorResponse(c, 500, err.Error())
+		return
+	}
+	var GoalID uuid.UUID
+	GoalID, err = uuid.Parse(Id_param)
+	if err != nil {
+		NewErrorResponse(c, 400, "invalid goal id")
+		return
+	}
+	transactions, err := h.services.Goal.GetGoalsTransactions(user_id, GoalID)
+	if err != nil {
+		NewErrorResponse(c, 500, err.Error())
+		return
+	}
+
+	c.JSON(200, transactions)
 }

@@ -17,12 +17,13 @@ func NewCategoryPostgres(db *sqlx.DB) *CategoryPostgres {
 
 func (r *CategoryPostgres) CreateCategory(userID uuid.UUID, category models.NewCategory) (uuid.UUID, error) {
 	query := `insert into budget.categories (name, description, user_id, type)
-values ($1, $2, $3, $4);`
-	_, err := r.db.Exec(query, category.Name, category.Description, userID, category.Type)
+values ($1, $2, $3, $4) returning uuid;`
+	var categoryID uuid.UUID
+	err := r.db.Get(&categoryID, query, category.Name, category.Description, userID, category.Type)
 	if err != nil {
 		return uuid.Nil, err
 	}
-	return uuid.New(), nil
+	return categoryID, nil
 }
 
 func (r *CategoryPostgres) UpdateCategory(category models.UpdateCategory) error {

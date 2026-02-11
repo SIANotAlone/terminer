@@ -18,13 +18,16 @@ func (h *Handler) ShareBudget(c *gin.Context) {
 		NewErrorResponse(c, 500, err.Error())
 		return
 	}
-
-	if err := h.services.Access.ShareBudget(user_id, input.BudgetID, input.TargetUser); err != nil {
+	var accessID uuid.UUID
+	if access_id, err := h.services.Access.ShareBudget(user_id, input.BudgetID, input.TargetUser); err != nil {
 		NewErrorResponse(c, 500, err.Error())
 		return
+	} else {
+		accessID = access_id
 	}
 	c.JSON(200, map[string]interface{}{
-		"message": "ok",
+		"message":   "ok",
+		"access_id": accessID,
 	})
 
 }
@@ -52,10 +55,21 @@ func (h *Handler) RevokeAccess(c *gin.Context) {
 
 func (h *Handler) GetBudgetAccessList(c *gin.Context) {
 	var budgetID models.BudgetID
-	if err := c.BindJSON(&budgetID); err != nil {
-		NewErrorResponse(c, 400, err.Error())
+	paramID := c.Query("budget_id")
+	if paramID == "" {
+		NewErrorResponse(c, 400, "parameter budget_id is required")
 		return
 	}
+
+	// 2. Объявляем переменную для ID
+	// Используем := для создания новой переменной err
+	parsedID, err := uuid.Parse(paramID)
+	if err != nil {
+		NewErrorResponse(c, 400, "budget_id must be a valid UUID")
+		return
+	}
+	budgetID.ID = parsedID
+
 	user_id, err := getUserId(c)
 	if err != nil {
 		NewErrorResponse(c, 500, err.Error())
@@ -87,11 +101,11 @@ func (h *Handler) GetAllUsers(c *gin.Context) {
 
 func (h *Handler) GetBudgetUsers(c *gin.Context) {
 	idParam := c.Param("budgetid")
-    budgetID, err := uuid.Parse(idParam)
-    if err != nil {
-       NewErrorResponse(c, 400, "id must be a valid UUID")
-        return
-    }
+	budgetID, err := uuid.Parse(idParam)
+	if err != nil {
+		NewErrorResponse(c, 400, "id must be a valid UUID")
+		return
+	}
 	user_id, err := getUserId(c)
 	if err != nil {
 		NewErrorResponse(c, 500, err.Error())
