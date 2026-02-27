@@ -5,9 +5,13 @@ import (
 	"os"
 	"os/signal"
 	"terminer"
-	"terminer/internal/handler"
-	"terminer/internal/repository"
-	"terminer/internal/service"
+	"terminer/internal/mainservice/handler"
+	"terminer/internal/mainservice/repository"
+	"terminer/internal/mainservice/service"
+
+	bsHandler "terminer/internal/budgetservice/handler"
+	bsRepo "terminer/internal/budgetservice/repository"
+	bsService "terminer/internal/budgetservice/service"
 
 	_ "terminer/docs"
 
@@ -56,10 +60,18 @@ func main() {
 	services := service.NewService(repos, logger)
 	handlers := handler.NewHandler(services)
 
+	budgetRepos := bsRepo.NewRepository(db)
+	budgetServices := bsService.NewService(budgetRepos)
+	budgetHandlers := bsHandler.NewHandler(budgetServices)
+
+	router := handlers.InitRoutes()
+	budgetHandlers.InitRoutes(router)
+
 	server := new(terminer.Server)
 
 	go func() {
-		if err := server.Run(viper.GetString("server.port"), handlers.InitRoutes()); err != nil {
+
+		if err := server.Run(viper.GetString("server.port"), router); err != nil {
 			logger.Fatalf("Failed to start server: %s", err.Error())
 		}
 	}()
