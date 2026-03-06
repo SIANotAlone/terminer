@@ -60,6 +60,10 @@ type Access interface {
 	HasUserAccessToBudget(userID uuid.UUID, budgetID uuid.UUID) (bool, error)
 }
 
+type Analytics interface {
+	GetDashboardData(budgetID, userID uuid.UUID) (*models.AnalyticsDashboard, error)
+}
+
 type Service struct {
 	Authorization Authorization
 	Budget        Budget
@@ -67,6 +71,7 @@ type Service struct {
 	Transaction   Transaction
 	Category      Category
 	Access        Access
+	Analytics     Analytics
 }
 
 func NewService(repos *repository.Repository) *Service {
@@ -77,5 +82,6 @@ func NewService(repos *repository.Repository) *Service {
 		Transaction:   NewTransactionService(repos.Transaction),
 		Category:      NewCategoryService(repos.Category),
 		Access:        NewAccessService(repos.Access),
+		Analytics:     NewAnalyticsService(repos.Analytics),
 	}
 }
