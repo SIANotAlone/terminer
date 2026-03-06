@@ -54,92 +54,132 @@ values ($1, $2, $3, $4, $5, $6, $7) returning transaction_id;`
 
 }
 
-func (r *TransactionPostgres) UpdateTransaction(transaction models.UpdateTransaction, oldAmount decimal.Decimal) error {
-    tx, err := r.db.Begin()
-    if err != nil {
-        return err
-    }
+func (r *TransactionPostgres) UpdateTransaction(userID uuid.UUID, newTx models.UpdateTransaction) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		}
+	}()
 
-    // Обновляем всё: и категорию, и сумму, и прочее.
-    // Через RETURNING забираем goal_id, который УЖЕ лежит в базе.
-    query := `
-        UPDATE budget.transactions 
-        SET category_id = $1, 
+	var oldAmount decimal.Decimal
+	var oldGoal uuid.NullUUID
+	var ownerID uuid.UUID
+
+	qSelect := `SELECT amount, goal_id, user_id FROM budget.transactions WHERE transaction_id = $1 FOR UPDATE;`
+	if err = tx.QueryRow(qSelect, newTx.TransactionID).Scan(&oldAmount, &oldGoal, &ownerID); err != nil {
+		return fmt.Errorf("select transaction for update failed: %w", err)
+	}
+
+	if ownerID != userID {
+		return fmt.Errorf("forbidden")
+	}
+
+	// 1) Всегда обновляем goal_id. Если newTx.GoalID == nil, в базу запишется NULL.
+	var newGoal uuid.NullUUID
+	qUpdate := `
+        UPDATE budget.transactions
+        SET category_id = $1,
             amount = $2,
             intent = $3,
             direction = $4,
             comment = $5,
+            goal_id = $6, -- Здесь теперь всегда обновляем
             date_update = current_timestamp
-        WHERE transaction_id = $6
-        RETURNING goal_id;`
+        WHERE transaction_id = $7
+        RETURNING goal_id;
+    `
+	// Передаем newTx.GoalID напрямую. Драйвер (например, pgx или lib/pq)
+	// поймет, что nil-указатель — это NULL в базе.
+	updateErr := tx.QueryRow(qUpdate,
+		newTx.CategoryID,
+		newTx.Amount,
+		newTx.Intent,
+		newTx.Direction,
+		newTx.Comment,
+		newTx.GoalID, // Указатель: если nil, то NULL
+		newTx.TransactionID,
+	).Scan(&newGoal)
 
-    var goalID uuid.NullUUID
-    err = tx.QueryRow(query, 
-        transaction.CategoryID, 
-        transaction.Amount, 
-        transaction.Intent, 
-        transaction.Direction, 
-        transaction.Comment, 
-        transaction.TransactionID,
-    ).Scan(&goalID)
+	if updateErr != nil {
+		return fmt.Errorf("update failed: %w", updateErr)
+	}
 
-    if err != nil {
-        tx.Rollback()
-        return fmt.Errorf("update failed: %w", err)
-    }
+	// 2) ИСПРАВЛЕННАЯ логика балансов целей
+	if oldGoal.Valid {
+		if newGoal.Valid {
+			if oldGoal.UUID == newGoal.UUID {
+				// Та же цель: корректируем разницу
+				q := `UPDATE budget.accumulation_goals SET current_saved = current_saved - $1 + $2 WHERE uuid = $3;`
+				_, err = tx.Exec(q, oldAmount, newTx.Amount, newGoal.UUID)
+			} else {
+				// Цель сменилась на другую: убираем из старой, добавляем в новую
+				q1 := `UPDATE budget.accumulation_goals SET current_saved = current_saved - $1 WHERE uuid = $2;`
+				_, err = tx.Exec(q1, oldAmount, oldGoal.UUID)
+				q2 := `UPDATE budget.accumulation_goals SET current_saved = current_saved + $1 WHERE uuid = $2;`
+				_, err = tx.Exec(q2, newTx.Amount, newGoal.UUID)
+			}
+		} else {
+			// ЦЕЛЬ БЫЛА, А ТЕПЕРЬ НЕТ (Удаление): Просто вычитаем старую сумму из старой цели
+			q := `UPDATE budget.accumulation_goals SET current_saved = current_saved - $1 WHERE uuid = $2;`
+			_, err = tx.Exec(q, oldAmount, oldGoal.UUID)
+		}
+	} else {
+		if newGoal.Valid {
+			// ЦЕЛИ НЕ БЫЛО, ТЕПЕРЬ ЕСТЬ: Добавляем всю новую сумму
+			q := `UPDATE budget.accumulation_goals SET current_saved = current_saved + $1 WHERE uuid = $2;`
+			_, err = tx.Exec(q, newTx.Amount, newGoal.UUID)
+		}
+	}
 
-    // Если у транзакции БЫЛА цель (неважно, какая категория), обновляем её баланс
-    if goalID.Valid {
-        query2 := `UPDATE budget.accumulation_goals 
-                   SET current_saved = current_saved - $1 + $2
-                   WHERE uuid = $3;`
-        _, err = tx.Exec(query2, oldAmount, transaction.Amount, goalID.UUID)
-        if err != nil {
-            tx.Rollback()
-            return fmt.Errorf("goal balance update failed: %w", err)
-        }
-    }
+	if err != nil {
+		return fmt.Errorf("balance adjustment failed: %w", err)
+	}
 
-    return tx.Commit()
+	return tx.Commit()
 }
-func (r *TransactionPostgres) DeleteTransaction(transactionID uuid.UUID) error {
-    tx, err := r.db.Begin()
-    if err != nil {
-        return err
-    }
 
-    // 1. Удаляем транзакцию и СРАЗУ возвращаем её сумму и цель, если они были.
-    // Это атомарная операция: мы берем данные именно той строки, которую удаляем.
-    query := `
+func (r *TransactionPostgres) DeleteTransaction(transactionID uuid.UUID) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// 1. Удаляем транзакцию и СРАЗУ возвращаем её сумму и цель, если они были.
+	// Это атомарная операция: мы берем данные именно той строки, которую удаляем.
+	query := `
         DELETE FROM budget.transactions 
         WHERE transaction_id = $1 
         RETURNING amount, goal_id;`
 
-    var amount decimal.Decimal
-    var goalID uuid.NullUUID
+	var amount decimal.Decimal
+	var goalID uuid.NullUUID
 
-    err = tx.QueryRow(query, transactionID).Scan(&amount, &goalID)
-    if err != nil {
-        tx.Rollback()
-        // Если транзакция не найдена, Scan вернет sql.ErrNoRows
-        return fmt.Errorf("transaction not found or failed to delete: %w", err)
-    }
+	err = tx.QueryRow(query, transactionID).Scan(&amount, &goalID)
+	if err != nil {
+		tx.Rollback()
+		// Если транзакция не найдена, Scan вернет sql.ErrNoRows
+		return fmt.Errorf("transaction not found or failed to delete: %w", err)
+	}
 
-    // 2. Если у удаленной транзакции БЫЛА цель, корректируем её баланс.
-    if goalID.Valid {
-        query2 := `
+	// 2. Если у удаленной транзакции БЫЛА цель, корректируем её баланс.
+	if goalID.Valid {
+		query2 := `
             UPDATE budget.accumulation_goals 
             SET current_saved = current_saved - $1
             WHERE uuid = $2;`
-        
-        _, err = tx.Exec(query2, amount, goalID.UUID)
-        if err != nil {
-            tx.Rollback()
-            return fmt.Errorf("failed to update goal balance: %w", err)
-        }
-    }
 
-    return tx.Commit()
+		_, err = tx.Exec(query2, amount, goalID.UUID)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("failed to update goal balance: %w", err)
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (r *TransactionPostgres) GetTransactionsByBudget(budgetID uuid.UUID) ([]models.Transaction, error) {

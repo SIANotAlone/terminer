@@ -66,6 +66,11 @@ func (h *Handler) InitRoutes(router *gin.Engine) {
 			access.GET("/getbudgetusers/:budgetid", h.GetBudgetUsers)
 		}
 
+		analytics := api.Group("/analytics", h.BudgetAccess)
+		{
+			analytics.GET("/dashboard/:budgetid", h.GetDashboardData)
+		}
+
 	}
 
 }

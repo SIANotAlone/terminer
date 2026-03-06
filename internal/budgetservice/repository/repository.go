@@ -37,7 +37,7 @@ type Goal interface {
 type Transaction interface {
 	CreateTransactionWithGoal(userID uuid.UUID, transaction models.NewTransaction) (uuid.UUID, error)
 	CreateTransactionWithoutGoal(userID uuid.UUID, transaction models.NewTransaction) (uuid.UUID, error)
-	UpdateTransaction(transaction models.UpdateTransaction, oldAmount decimal.Decimal) error
+	UpdateTransaction(userID uuid.UUID, newTx models.UpdateTransaction) error
 	DeleteTransaction(transactionID uuid.UUID) error
 
 	GetTransactionsByBudget(budgetID uuid.UUID) ([]models.Transaction, error)
@@ -70,12 +70,17 @@ type Access interface {
 	GetBudgetIDByAccessID(accessID uuid.UUID) (uuid.UUID, error)
 }
 
+type Analytics interface {
+	GetDashboardData(budgetID, userID uuid.UUID) (*models.AnalyticsDashboard, error)
+}
+
 type Repository struct {
 	Budget      Budget
 	Goal        Goal
 	Transaction Transaction
 	Category    Category
 	Access      Access
+	Analytics   Analytics
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
@@ -85,5 +90,6 @@ func NewRepository(db *sqlx.DB) *Repository {
 		Transaction: NewTransactionPostgres(db),
 		Category:    NewCategoryPostgres(db),
 		Access:      NewAccessPostgres(db),
+		Analytics:   NewAnalyticsPostgres(db),
 	}
 }
