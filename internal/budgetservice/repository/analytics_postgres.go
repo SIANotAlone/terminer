@@ -62,10 +62,10 @@ func (r *AnalyticsPostgres) GetDashboardData(budgetID, userID uuid.UUID) (*model
 		       COALESCE(SUM(CASE WHEN t.intent = 'ACTUAL' THEN t.amount END), 0) as actual
 		FROM budget.transactions t
 		JOIN budget.categories c ON t.category_id = c.uuid
-		WHERE t.budget_id = $1 AND t.direction = 'EXPENSE' AND t.date >= $2 AND t.date <= $3
+		WHERE t.budget_id = $1 AND t.direction = 'EXPENSE'
 		GROUP BY c.name`
 
-	rowsBar, err := r.db.Query(queryBar, budgetID, startDate, endDate)
+	rowsBar, err := r.db.Query(queryBar, budgetID)
 	if err != nil {
 		return nil, err
 	}
