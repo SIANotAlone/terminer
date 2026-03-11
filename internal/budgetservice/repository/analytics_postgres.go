@@ -39,10 +39,10 @@ func (r *AnalyticsPostgres) GetDashboardData(budgetID, userID uuid.UUID) (*model
 		FROM budget.transactions t
 		JOIN budget.categories c ON t.category_id = c.uuid
 		WHERE t.budget_id = $1 AND t.direction = 'EXPENSE' AND t.intent = 'ACTUAL'
-		  AND t.date >= $2 AND t.date <= $3
+		  
 		GROUP BY c.name ORDER BY SUM(t.amount) DESC`
 
-	rowsDonut, err := r.db.Query(queryDonut, budgetID, startDate, endDate)
+	rowsDonut, err := r.db.Query(queryDonut, budgetID)
 	if err != nil {
 		return nil, err
 	}
@@ -83,16 +83,16 @@ func (r *AnalyticsPostgres) GetDashboardData(budgetID, userID uuid.UUID) (*model
 		SELECT DATE(t.date) as day, SUM(t.amount) 
 		FROM budget.transactions t
 		WHERE t.budget_id = $1 AND t.direction = 'EXPENSE' AND t.intent = 'ACTUAL'
-		  AND t.date >= $2 AND t.date <= $3
+		
 		GROUP BY DATE(t.date) ORDER BY day ASC`
 
-	rowsArea, err := r.db.Query(queryArea, budgetID, startDate, endDate)
+	rowsArea, err := r.db.Query(queryArea, budgetID)
 	if err != nil {
 		return nil, err
 	}
 	var ukrMonthsShort = []string{
-		"Січ", "Лют", "Бер", "Квіт", "Трав", "Черв",
-		"Лип", "Серп", "Вер", "Жовт", "Лист", "Груд",
+		"Січня", "Лютого", "Березня", "Квітня", "Травня", "Червня",
+		"Липня", "Серпня", "Вересня", "Жовтня", "Листопада", "Грудня",
 	}
 	defer rowsArea.Close()
 	for rowsArea.Next() {
@@ -134,19 +134,40 @@ func (r *AnalyticsPostgres) GetDashboardData(budgetID, userID uuid.UUID) (*model
 	}
 
 	// 5. Статистика (Текущий месяц vs Прошлый месяц) для пустого стейта с советом
-	// Вычисляем границы прошлого периода
 	duration := endDate.Sub(startDate)
 	prevEndDate := startDate.Add(-time.Second)
 	prevStartDate := prevEndDate.Add(-duration)
 
-	queryStats := `
-		SELECT 
-			COALESCE(SUM(CASE WHEN date >= $2 AND date <= $3 THEN amount ELSE 0 END), 0) as current_spent,
-			COALESCE(SUM(CASE WHEN date >= $4 AND date <= $5 THEN amount ELSE 0 END), 0) as prev_spent
-		FROM budget.transactions
-		WHERE budget_id = $1 AND direction = 'EXPENSE' AND intent = 'ACTUAL'`
+	// ШАГ 1: Находим ID предыдущего бюджета по вычисленным датам.
+	// ВАЖНО: Замените 'owner_id' на то поле, которое объединяет бюджеты одного пользователя/категории
+	// (например, user_id, account_id или group_id), чтобы не захватить чужой бюджет на эти же даты.
+	var prevBudgetID *string // Используем указатель, на случай если прошлого бюджета не существует
 
-	err = r.db.QueryRow(queryStats, budgetID, startDate, endDate, prevStartDate, prevEndDate).
+	queryPrevBudget := `
+        SELECT uuid 
+        FROM budget.budgets 
+        WHERE owner_id = (SELECT owner_id FROM budget.budgets WHERE uuid = $1)
+          AND date_start = $2 
+          AND date_end = $3
+        LIMIT 1`
+
+	err = r.db.QueryRow(queryPrevBudget, budgetID, prevStartDate, prevEndDate).Scan(&prevBudgetID)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	// ШАГ 2: Считаем суммы, привязываясь ТОЛЬКО к ID бюджетов.
+	// Даты самих транзакций здесь больше не играют роли.
+	queryStats := `
+        SELECT 
+            COALESCE(SUM(CASE WHEN budget_id = $1 THEN amount ELSE 0 END), 0) as current_spent,
+            COALESCE(SUM(CASE WHEN budget_id = $2 THEN amount ELSE 0 END), 0) as prev_spent
+        FROM budget.transactions
+        WHERE budget_id IN ($1, $2) 
+          AND direction = 'EXPENSE' 
+          AND intent = 'ACTUAL'`
+
+	err = r.db.QueryRow(queryStats, budgetID, prevBudgetID).
 		Scan(&dashboard.TotalSpent, &dashboard.PrevSpent)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
