@@ -42,7 +42,8 @@ func (r *CategoryPostgres) GetAvaliableCategories(userID uuid.UUID) ([]models.Ca
 	query := `SELECT dc.uuid, dc.name, dc.description, u.first_name || ' '|| u.last_name as owner, dc.date, dc.is_based, dc.type
 FROM budget.categories dc
 LEFT JOIN main.user u on u.uuid = dc.user_id
-WHERE dc.user_id = $1 OR dc.is_based = true`
+WHERE dc.user_id = $1 OR dc.is_based = true
+ORDER BY dc.type, dc.name;`
 	rows, err := r.db.Query(query, userID)
 	if err != nil {
 		return nil, err
