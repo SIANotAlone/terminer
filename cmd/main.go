@@ -9,6 +9,8 @@ import (
 	"terminer/internal/mainservice/repository"
 	"terminer/internal/mainservice/service"
 
+	"terminer/pkg/logger"
+
 	bsHandler "terminer/internal/budgetservice/handler"
 	bsRepo "terminer/internal/budgetservice/repository"
 	bsService "terminer/internal/budgetservice/service"
@@ -36,9 +38,13 @@ import (
 func main() {
 	// TODO add logger to all services and repos
 	// TODO add statistics service
-	logger := logrus.New()
+	logger := logger.New()
 	logger.SetOutput(os.Stdout)
-	logger.SetFormatter(&logrus.JSONFormatter{})
+	logger.SetFormatter(&logrus.JSONFormatter{
+		TimestampFormat: "2006-01-02 15:04:05.000", // Формат: ГГГГ-ММ-ДД ЧЧ:ММ:СС.мс
+		PrettyPrint:     false,                     // В проде ставим false для экономии места
+	})
+
 	if err := initConfig(); err != nil {
 		logger.Fatalf("Failed to init config: %s", err.Error())
 	}
@@ -62,7 +68,7 @@ func main() {
 
 	budgetRepos := bsRepo.NewRepository(db)
 	budgetServices := bsService.NewService(budgetRepos)
-	budgetHandlers := bsHandler.NewHandler(budgetServices)
+	budgetHandlers := bsHandler.NewHandler(budgetServices, logger)
 
 	router := handlers.InitRoutes()
 	budgetHandlers.InitRoutes(router)
@@ -75,7 +81,7 @@ func main() {
 			logger.Fatalf("Failed to start server: %s", err.Error())
 		}
 	}()
-	logger.Print("Server started")
+	logger.Info("Server started")
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit

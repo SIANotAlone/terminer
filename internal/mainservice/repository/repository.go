@@ -3,9 +3,10 @@ package repository
 import (
 	"terminer/internal/mainservice/models"
 
+	"terminer/pkg/logger"
+
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/sirupsen/logrus"
 )
 
 type Authorization interface {
@@ -39,7 +40,7 @@ type Offering interface {
 	DeleteAvailableTime(at models.DeleteAvailableTime, user uuid.UUID) error
 	NewAvailableFor(af models.NewAvailableFor) (int, error)
 	DeleteAvailableFor(af models.DeleteAvailableFor, user uuid.UUID) error
-	
+
 	GetUserTelegramID(user_id uuid.UUID) (string, error)
 	GetAllUsersTelegramID() ([]string, error)
 }
@@ -89,8 +90,6 @@ type Statistic interface {
 	GetProvidedServicesTypes(user uuid.UUID, year int) ([]models.ByType, error)
 	GetAvailableYears(user uuid.UUID) ([]int, error)
 	GetMainStatistic(user uuid.UUID, year int) (models.MainStatistic, error)
-
-
 }
 
 type Repository struct {
@@ -101,10 +100,10 @@ type Repository struct {
 	Comment
 	Termin
 	Statistic
-	logger logrus.Logger
+	logger logger.Logger
 }
 
-func NewRepository(db *sqlx.DB, logger *logrus.Logger) *Repository {
+func NewRepository(db *sqlx.DB, logger *logger.Logger) *Repository {
 	return &Repository{
 		Authorization: NewAuthPostgres(db),
 		Offering:      NewOfferingPostgres(db),

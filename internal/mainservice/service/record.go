@@ -7,16 +7,17 @@ import (
 	"terminer/internal/mainservice/observer"
 	"terminer/internal/mainservice/repository"
 
+	"terminer/pkg/logger"
+
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 )
 
 type RecordService struct {
 	repo   repository.Record
-	logger logrus.Logger
+	logger logger.Logger
 }
 
-func NewRecordService(repo repository.Record, logger *logrus.Logger) *RecordService {
+func NewRecordService(repo repository.Record, logger *logger.Logger) *RecordService {
 	return &RecordService{repo: repo, logger: *logger}
 }
 

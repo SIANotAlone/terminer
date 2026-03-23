@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"terminer/pkg/logger"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -24,6 +26,7 @@ func (h *Handler) UserIdentity(c *gin.Context) {
 
 	header := c.GetHeader(authorizationHeader)
 	if header == "" {
+		h.logger.Debug("UserIdentity: empty auth header")
 		NewErrorResponse(c, http.StatusUnauthorized, "empty auth header")
 		c.Abort()
 		return
@@ -31,6 +34,7 @@ func (h *Handler) UserIdentity(c *gin.Context) {
 
 	headerParts := strings.Split(header, " ")
 	if len(headerParts) != 2 {
+		h.logger.Debugf("UserIdentity: invalid header format: %s", header)
 		NewErrorResponse(c, http.StatusUnauthorized, "invalid auth header")
 		c.Abort()
 		return
@@ -38,6 +42,7 @@ func (h *Handler) UserIdentity(c *gin.Context) {
 
 	userID, err := h.services.Authorization.ParseToken(headerParts[1])
 	if err != nil {
+		h.logger.WithError(err).Warn("UserIdentity: token parsing failed")
 		NewErrorResponse(c, http.StatusUnauthorized, "invalid token")
 		c.Abort()
 		return
@@ -124,4 +129,56 @@ func (h *Handler) BudgetAccess(c *gin.Context) {
 	}
 
 	c.Next()
+}
+
+
+
+
+func (h *Handler) RequestLogger() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        start := time.Now()
+        path := c.Request.URL.Path
+        raw := c.Request.URL.RawQuery
+        method := c.Request.Method // <--- Объявляем здесь, чтобы была доступна ниже
+
+        // Передаем управление дальше (выполняются хендлеры)
+        c.Next()
+
+        // Собираем данные ПОСЛЕ выполнения
+        latency := time.Since(start)
+        statusCode := c.Writer.Status()
+        clientIP := c.ClientIP()
+
+        // 1. Создаем мапу полей (наш logger.Fields)
+        fields := logger.Fields{
+            "status":   statusCode,
+            "method":   method, // Теперь она точно видна
+            "path":     path,
+            "ip":       clientIP,
+            "duration": latency.String(),
+        }
+
+        // 2. Добавляем query, если он есть
+        if raw != "" {
+            fields["query"] = raw
+        }
+
+        // 3. Попытаемся достать userID (если запрос прошел через UserIdentity)
+        if id, exists := c.Get(userCtx); exists {
+            fields["user_id"] = id
+        }
+
+        // 4. Создаем запись в лог через твою обертку
+        entry := h.logger.WithFields(fields)
+
+        // 5. Выбираем уровень логирования
+        msg := "network_request"
+        if statusCode >= 500 {
+            entry.Error(msg)
+        } else if statusCode >= 400 {
+            entry.Warn(msg)
+        } else {
+            entry.Info(msg)
+        }
+    }
 }
