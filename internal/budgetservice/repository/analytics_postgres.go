@@ -35,12 +35,14 @@ func (r *AnalyticsPostgres) GetDashboardData(budgetID, userID uuid.UUID) (*model
 
 	// 1. Donut Chart: Структура витрат (Фактические расходы по категориям)
 	queryDonut := `
-		SELECT c.name, SUM(t.amount) 
-		FROM budget.transactions t
-		JOIN budget.categories c ON t.category_id = c.uuid
-		WHERE t.budget_id = $1 AND t.direction = 'EXPENSE' AND t.intent = 'ACTUAL'
-		  
-		GROUP BY c.name ORDER BY SUM(t.amount) DESC`
+		SELECT 
+    c.name || ' (' || ROUND((SUM(t.amount) * 100.0) / NULLIF(SUM(SUM(t.amount)) OVER (), 0), 2) || '%)' AS name,
+    SUM(t.amount) AS amount
+FROM budget.transactions t
+JOIN budget.categories c ON t.category_id = c.uuid
+WHERE t.budget_id = $1 AND t.direction = 'EXPENSE' AND t.intent = 'ACTUAL'
+GROUP BY c.name 
+ORDER BY amount DESC;`
 
 	rowsDonut, err := r.db.Query(queryDonut, budgetID)
 	if err != nil {
