@@ -4,8 +4,9 @@ import (
 	"terminer/internal/mainservice/models"
 	"terminer/internal/mainservice/repository"
 
+	"terminer/pkg/logger"
+
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 )
 
 type Authorization interface {
@@ -93,10 +94,10 @@ type Service struct {
 	Comment
 	Termin
 	Statistic
-	logger logrus.Logger
+	logger logger.Logger
 }
 
-func NewService(repos *repository.Repository, logger *logrus.Logger) *Service {
+func NewService(repos *repository.Repository, logger *logger.Logger) *Service {
 	return &Service{
 		Authorization: NewAuthService(repos.Authorization),
 		Offering:      NewOfferingService(repos.Offering, logger),

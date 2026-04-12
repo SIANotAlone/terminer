@@ -8,16 +8,18 @@ import (
 	"terminer/internal/mainservice/repository"
 	"time"
 
+	"terminer/pkg/logger"
+
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
+
 )
 
 type OfferingService struct {
 	repo   repository.Offering
-	logger logrus.Logger
+	logger logger.Logger
 }
 
-func NewOfferingService(repo repository.Offering, logger *logrus.Logger) *OfferingService {
+func NewOfferingService(repo repository.Offering, logger *logger.Logger) *OfferingService {
 	return &OfferingService{repo: repo, logger: *logger}
 }
 
