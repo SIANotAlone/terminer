@@ -32,6 +32,7 @@ type Goal struct {
 	RequiredMonthlySave decimal.Decimal `json:"required_monthly_save"`
 	CurrencyCode        string          `json:"currency_code"`
 	CurrencyName        string          `json:"currency_name"`
+	Archived            bool            `json:"archived"`
 }
 
 type GoalID struct {

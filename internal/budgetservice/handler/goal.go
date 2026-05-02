@@ -159,3 +159,91 @@ func (h *Handler) GetGoalsTransactions(c *gin.Context) {
 
 	c.JSON(200, transactions)
 }
+
+func (h *Handler) ArchiveGoal(c *gin.Context) {
+	var GoalID models.GoalID
+	if err := c.BindJSON(&GoalID); err != nil {
+		h.logger.Debugf("ArchiveGoal: bad input: %v", err)
+		NewErrorResponse(c, 400, "invalid id format")
+		return
+	}
+	user_id, err := getUserId(c)
+	if err != nil {
+		h.logger.WithError(err).Error("CRITICAL: user context lost in handler")
+		NewErrorResponse(c, http.StatusUnauthorized, "invalid token")
+		return
+	}
+
+	if err := h.services.Goal.ArchiveGoal(user_id, GoalID.ID); err != nil {
+		h.logger.WithFields(logger.Fields{
+			"user_id": user_id,
+			"goal_id": GoalID.ID,
+		}).WithError(err).Error("archive goal failed")
+		NewErrorResponse(c, 500, "internal error")
+		return
+	}
+
+	h.logger.WithFields(logger.Fields{
+		"user_id": user_id,
+		"goal_id": GoalID.ID,
+	}).Info("goal archived")
+
+	c.JSON(200, map[string]interface{}{
+		"message": "ok",
+	})
+}
+
+func (h *Handler) UnArchiveGoal(c *gin.Context) {
+	var GoalID models.GoalID
+	if err := c.BindJSON(&GoalID); err != nil {
+		h.logger.Debugf("UnArchiveGoal: bad input: %v", err)
+		NewErrorResponse(c, 400, "invalid id format")
+		return
+	}
+	user_id, err := getUserId(c)
+	if err != nil {
+		h.logger.WithError(err).Error("CRITICAL: user context lost in handler")
+		NewErrorResponse(c, http.StatusUnauthorized, "invalid token")
+		return
+	}
+
+	if err := h.services.Goal.UnArchiveGoal(user_id, GoalID.ID); err != nil {
+		h.logger.WithFields(logger.Fields{
+			"user_id": user_id,
+			"goal_id": GoalID.ID,
+		}).WithError(err).Error("unarchive goal failed")
+		NewErrorResponse(c, 500, "internal error")
+		return
+	}
+
+	h.logger.WithFields(logger.Fields{
+		"user_id": user_id,
+		"goal_id": GoalID.ID,
+	}).Info("goal unarchived")
+
+	c.JSON(200, map[string]interface{}{
+		"message": "ok",
+	})
+}
+
+func (h *Handler) GetAllGoals(c *gin.Context) {
+	user_id, err := getUserId(c)
+	if err != nil {
+		h.logger.WithError(err).Error("CRITICAL: user context lost in handler")
+		NewErrorResponse(c, http.StatusUnauthorized, "invalid token")
+		return
+	}
+
+	goals, err := h.services.Goal.GetAllGoals(user_id)
+	if err != nil {
+
+		h.logger.WithFields(logger.Fields{
+			"user_id": user_id,
+		}).WithError(err).Error("failed to fetch goals")
+
+		NewErrorResponse(c, 500, err.Error())
+		return
+	}
+
+	c.JSON(200, goals)
+}
