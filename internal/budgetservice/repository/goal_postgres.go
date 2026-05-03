@@ -49,7 +49,37 @@ func (r *GoalPostgres) DeleteGoal(goalID uuid.UUID) error {
 }
 
 func (r *GoalPostgres) GetAvailableGoals(userID uuid.UUID) ([]models.Goal, error) {
-	query := `SELECT dc.uuid, dc.target_name, dc.target_amount, dc.target_date, dc.current_saved, c.code, c.name
+	query := `SELECT dc.uuid, dc.target_name, dc.target_amount, dc.target_date, dc.current_saved, c.code, c.name, dc.archived
+FROM budget.accumulation_goals dc
+LEFT JOIN budget.currencies c on c.id = dc.currency_id 
+WHERE dc.user_id = $1 AND dc.archived = false;`
+
+	var goals []models.Goal
+	rows, err := r.db.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var goal models.Goal
+		err := rows.Scan(&goal.ID, &goal.TargetName, &goal.TargetAmount, &goal.TargetDate, &goal.CurrentSaved, &goal.CurrencyCode, &goal.CurrencyName, &goal.Archived)
+		if err != nil {
+			return nil, err
+		}
+		monthsNeeded := monthsFromNowSimple(goal.TargetDate)
+		if monthsNeeded <= 0 {
+			goal.RequiredMonthlySave = goal.TargetAmount
+		} else {
+			goal.RequiredMonthlySave = goal.TargetAmount.Sub(goal.CurrentSaved).Div(decimal.NewFromInt(int64(monthsNeeded)))
+		}
+		goals = append(goals, goal)
+	}
+	return goals, nil
+}
+
+func (r *GoalPostgres) GetAllGoals(userID uuid.UUID) ([]models.Goal, error) {
+	query := `SELECT dc.uuid, dc.target_name, dc.target_amount, dc.target_date, dc.current_saved, c.code, c.name, dc.archived
 FROM budget.accumulation_goals dc
 LEFT JOIN budget.currencies c on c.id = dc.currency_id 
 WHERE dc.user_id = $1;`
@@ -63,7 +93,7 @@ WHERE dc.user_id = $1;`
 
 	for rows.Next() {
 		var goal models.Goal
-		err := rows.Scan(&goal.ID, &goal.TargetName, &goal.TargetAmount, &goal.TargetDate, &goal.CurrentSaved, &goal.CurrencyCode, &goal.CurrencyName)
+		err := rows.Scan(&goal.ID, &goal.TargetName, &goal.TargetAmount, &goal.TargetDate, &goal.CurrentSaved, &goal.CurrencyCode, &goal.CurrencyName, &goal.Archived)
 		if err != nil {
 			return nil, err
 		}
@@ -122,4 +152,22 @@ where dc.goal_id = $1;`
 		transactions = append(transactions, transaction)
 	}
 	return transactions, nil
+}
+
+func (r *GoalPostgres) ArchiveGoal(userID uuid.UUID, goalID uuid.UUID) error {
+	query := `update budget.accumulation_goals set archived = true where uuid = $1 and user_id = $2;`
+	_, err := r.db.Exec(query, goalID, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *GoalPostgres) UnArchiveGoal(userID uuid.UUID, goalID uuid.UUID) error {
+	query := `update budget.accumulation_goals set archived = false where uuid = $1 and user_id = $2;`
+	_, err := r.db.Exec(query, goalID, userID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

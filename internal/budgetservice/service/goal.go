@@ -46,6 +46,10 @@ func (s *GoalService) GetAvailableGoals(userID uuid.UUID) ([]models.Goal, error)
 	return s.repo.GetAvailableGoals(userID)
 }
 
+func (s *GoalService) GetAllGoals(userID uuid.UUID) ([]models.Goal, error) {
+	return s.repo.GetAllGoals(userID)
+}
+
 func (s *GoalService) GetGoalsTransactions(userID uuid.UUID, goalID uuid.UUID) ([]models.GoalTransaction, error) {
 	GoalOwner, err := s.repo.GetGoalOwnerID(goalID)
 	if err != nil {
@@ -55,4 +59,14 @@ func (s *GoalService) GetGoalsTransactions(userID uuid.UUID, goalID uuid.UUID) (
 		return nil, fmt.Errorf("user is not the owner of the goal")
 	}
 	return s.repo.GetGoalsTransactions(goalID)
+}
+
+
+func (s *GoalService) ArchiveGoal(userID uuid.UUID, goalID uuid.UUID) error  {
+	return s.repo.ArchiveGoal(userID, goalID)
+	
+}
+
+func (s *GoalService) UnArchiveGoal(userID uuid.UUID, goalID uuid.UUID) error  {
+	return s.repo.UnArchiveGoal(userID, goalID)
 }

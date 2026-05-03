@@ -6,25 +6,23 @@ import (
 	"terminer/pkg/logger"
 
 	"github.com/gin-gonic/gin"
-
 )
 
 type Handler struct {
 	services *service.Service
-	logger *logger.Logger
+	logger   *logger.Logger
 }
 
 func NewHandler(services *service.Service, logger *logger.Logger) *Handler {
 	return &Handler{
 		services: services,
-		logger: logger,
-
+		logger:   logger,
 	}
 }
 
 func (h *Handler) InitRoutes(router *gin.Engine) {
 	router.Use(h.RequestLogger())
-    router.Use(gin.Recovery())
+	router.Use(gin.Recovery())
 
 	api := router.Group("/api", h.UserIdentity)
 	{
@@ -46,7 +44,10 @@ func (h *Handler) InitRoutes(router *gin.Engine) {
 			goal.PUT("/update", h.UpdateGoal)
 			goal.DELETE("/delete", h.DeleteGoal)
 			goal.GET("/getavailablegoals", h.GetAvailableGoals)
+			goal.GET("/getallgoals", h.GetAllGoals)
 			goal.GET("/getgoalstransactions/:goalid", h.GetGoalsTransactions)
+			goal.PUT("/archive", h.ArchiveGoal)
+			goal.PUT("/unarchive", h.UnArchiveGoal)
 
 		}
 		transaction := api.Group("/transaction", h.BudgetAccess)

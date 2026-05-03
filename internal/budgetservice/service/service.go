@@ -29,8 +29,11 @@ type Goal interface {
 	CreateGoal(userID uuid.UUID, goal models.NewGoal) (uuid.UUID, error)
 	UpdateGoal(userID uuid.UUID, goal models.UpdateGoal) error
 	DeleteGoal(userID uuid.UUID, goalID uuid.UUID) error
+	ArchiveGoal(userID uuid.UUID, goalID uuid.UUID) error
+	UnArchiveGoal(userID uuid.UUID, goalID uuid.UUID) error
 
 	GetAvailableGoals(userID uuid.UUID) ([]models.Goal, error)
+	GetAllGoals(userID uuid.UUID) ([]models.Goal, error)
 	GetGoalsTransactions(userID uuid.UUID, goalID uuid.UUID) ([]models.GoalTransaction, error)
 }
 
