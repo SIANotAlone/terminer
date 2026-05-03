@@ -135,44 +135,58 @@ ORDER BY amount DESC;`
 		dashboard.RadialChart = append(dashboard.RadialChart, g)
 	}
 
-	// 5. Статистика (Текущий месяц vs Прошлый месяц) для пустого стейта с советом
-	duration := endDate.Sub(startDate)
-	prevEndDate := startDate.Add(-time.Second)
-	prevStartDate := prevEndDate.Add(-duration)
+	// 5. Статистика (Текущий бюджет vs Предыдущий бюджет)
 
-	// ШАГ 1: Находим ID предыдущего бюджета по вычисленным датам.
-	// ВАЖНО: Замените 'owner_id' на то поле, которое объединяет бюджеты одного пользователя/категории
-	// (например, user_id, account_id или group_id), чтобы не захватить чужой бюджет на эти же даты.
-	var prevBudgetID *string // Используем указатель, на случай если прошлого бюджета не существует
+	// --- ШАГ 1: найти предыдущий бюджет ---
+	var prevBudgetID uuid.UUID
 
-	queryPrevBudget := `
-        SELECT uuid 
-        FROM budget.budgets 
-        WHERE owner_id = (SELECT owner_id FROM budget.budgets WHERE uuid = $1)
-          AND date_start = $2 
-          AND date_end = $3
-        LIMIT 1`
+	err = r.db.QueryRow(`
+    SELECT uuid
+    FROM budget.budgets
+    WHERE owner_id = (SELECT owner_id FROM budget.budgets WHERE uuid = $1)
+      AND date_end < (SELECT date_start FROM budget.budgets WHERE uuid = $1)
+    ORDER BY date_end DESC
+    LIMIT 1
+`, budgetID).Scan(&prevBudgetID)
 
-	err = r.db.QueryRow(queryPrevBudget, budgetID, prevStartDate, prevEndDate).Scan(&prevBudgetID)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// предыдущего бюджета нет → это нормальный кейс
+			prevBudgetID = uuid.Nil
+		} else {
+			return nil, err
+		}
+	}
+
+	// --- ШАГ 2: считаем текущие траты ---
+	err = r.db.QueryRow(`
+    SELECT COALESCE(SUM(amount), 0)
+    FROM budget.transactions
+    WHERE budget_id = $1
+      AND direction = 'EXPENSE'
+      AND intent = 'ACTUAL'
+`, budgetID).Scan(&dashboard.TotalSpent)
+
+	if err != nil {
 		return nil, err
 	}
 
-	// ШАГ 2: Считаем суммы, привязываясь ТОЛЬКО к ID бюджетов.
-	// Даты самих транзакций здесь больше не играют роли.
-	queryStats := `
-        SELECT 
-            COALESCE(SUM(CASE WHEN budget_id = $1 THEN amount ELSE 0 END), 0) as current_spent,
-            COALESCE(SUM(CASE WHEN budget_id = $2 THEN amount ELSE 0 END), 0) as prev_spent
+	// --- ШАГ 3: считаем предыдущие траты ---
+	if prevBudgetID != uuid.Nil {
+		err = r.db.QueryRow(`
+        SELECT COALESCE(SUM(amount), 0)
         FROM budget.transactions
-        WHERE budget_id IN ($1, $2) 
-          AND direction = 'EXPENSE' 
-          AND intent = 'ACTUAL'`
+        WHERE budget_id = $1
+          AND direction = 'EXPENSE'
+          AND intent = 'ACTUAL'
+    `, prevBudgetID).Scan(&dashboard.PrevSpent)
 
-	err = r.db.QueryRow(queryStats, budgetID, prevBudgetID).
-		Scan(&dashboard.TotalSpent, &dashboard.PrevSpent)
-	if err != nil && err != sql.ErrNoRows {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// если прошлого бюджета нет
+		dashboard.PrevSpent = 0
 	}
 
 	return dashboard, nil
