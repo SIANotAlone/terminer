@@ -65,7 +65,9 @@ ORDER BY amount DESC;`
 		FROM budget.transactions t
 		JOIN budget.categories c ON t.category_id = c.uuid
 		WHERE t.budget_id = $1 AND t.direction = 'EXPENSE'
-		GROUP BY c.name`
+		GROUP BY c.name
+		ORDER BY actual DESC;
+		`
 
 	rowsBar, err := r.db.Query(queryBar, budgetID)
 	if err != nil {
