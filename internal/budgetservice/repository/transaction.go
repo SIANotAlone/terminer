@@ -135,8 +135,9 @@ func (r *TransactionPostgres) UpdateTransaction(userID uuid.UUID, newTx models.U
 			direction = $4,
 			comment = $5,
 			goal_id = $6,
+			date = COALESCE($7, date),
 			date_update = current_timestamp
-		WHERE transaction_id = $7
+		WHERE transaction_id = $8
 		RETURNING goal_id;
 	`
 	if err = tx.QueryRow(
@@ -147,6 +148,7 @@ func (r *TransactionPostgres) UpdateTransaction(userID uuid.UUID, newTx models.U
 		newTx.Direction,
 		newTx.Comment,
 		newTx.GoalID,
+		newTx.Date,
 		newTx.TransactionID,
 	).Scan(&newGoal); err != nil {
 		return fmt.Errorf("update failed: %w", err)

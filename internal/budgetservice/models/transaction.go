@@ -25,6 +25,7 @@ type UpdateTransaction struct {
 	Direction     string          `json:"direction"`
 	Comment       string          `json:"comment"`
 	GoalID        *uuid.UUID      `json:"goal_id,omitempty"` // опціональне
+	Date          *time.Time      `json:"date,omitempty"`    // опціональне
 }
 
 type Transaction struct {
