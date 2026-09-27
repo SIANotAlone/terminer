@@ -155,8 +155,19 @@ func (h *Handler) GetTransactionsByBudget(c *gin.Context) {
 		NewErrorResponse(c, 500, "could not retrieve transactions")
 		return
 	}
+	budget_info, err := h.services.Budget.GetBudgetInfo(budgetID)
+	if err != nil {
+		h.logger.WithFields(logger.Fields{
+			"user":      user_id,
+			"budget_id": budgetID,
+		}).WithError(err).Error("failed to fetch budget info")
+		NewErrorResponse(c, 500, "could not retrieve budget info")
+		return
+	}
+
 	c.JSON(200, map[string]interface{}{
 		"message":      "ok",
+		"budget_info":  budget_info,
 		"transactions": transactions,
 	})
 }

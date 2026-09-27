@@ -23,7 +23,7 @@ func (s *TransactionService) CreateTransaction(userID uuid.UUID, transaction mod
 }
 
 func (s *TransactionService) UpdateTransaction(userID uuid.UUID, tx models.UpdateTransaction) error {
-    return s.repo.UpdateTransaction(userID, tx)
+	return s.repo.UpdateTransaction(userID, tx)
 }
 
 func (s *TransactionService) DeleteTransaction(userID uuid.UUID, transactionID uuid.UUID) error {
@@ -37,3 +37,4 @@ func (s *TransactionService) GetTransactionsByBudget(userID uuid.UUID, budgetID 
 func (s *TransactionService) GetBudgetIdByTransactionID(transactionID uuid.UUID) (uuid.UUID, error) {
 	return s.repo.GetBudgetIdByTransactionID(transactionID)
 }
+

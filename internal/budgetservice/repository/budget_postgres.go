@@ -212,3 +212,36 @@ func (r *BudgetPostgres) GetCurrencies() ([]models.Currency, error) {
 	}
 	return currencies, nil
 }
+
+func (r *BudgetPostgres) GetBudgetInfo(budgetID uuid.UUID) (*models.BudgetInfo, error) {
+	query := `
+	select dc.name as budget_name, u.first_name || ' '|| u.last_name as owner_name, u.email as owner_email, 
+bt.name as budget_type, dc.date as created_at, dc.date_start as budget_start, dc.date_end as budget_end, bc.name as budget_currency,
+bc.code as currency_code, bc.symbol as currency_symbol, dc.archived as is_archived 
+
+from budget.budgets dc
+
+left join main.user u on u.uuid = dc.owner_id
+left join budget.budget_types bt on bt.id = dc.type
+left join budget.currencies bc on bc.id = dc.base_currency
+
+where dc.uuid = $1;`
+	var budgetInfo models.BudgetInfo
+	err := r.db.QueryRow(query, budgetID).Scan(
+		&budgetInfo.BudgetName,
+		&budgetInfo.OwnerName,
+		&budgetInfo.OwnerEmail,
+		&budgetInfo.BudgetType,
+		&budgetInfo.CreatedAt,
+		&budgetInfo.BudgetStartDate,
+		&budgetInfo.BudgetEndDate,
+		&budgetInfo.BudgetCurrency,
+		&budgetInfo.CurrencyCode,
+		&budgetInfo.CurrencySymbol,
+		&budgetInfo.IsArchived,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &budgetInfo, nil
+}
