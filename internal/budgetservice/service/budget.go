@@ -81,3 +81,7 @@ func (s *BudgetService) GetBudgetOwnerID(budgetID uuid.UUID) (uuid.UUID, error) 
 func (s *BudgetService) GetCurrencies() ([]models.Currency, error) {
 	return s.repo.GetCurrencies()
 }
+
+func (s *BudgetService) GetBudgetInfo(budgetID uuid.UUID) (*models.BudgetInfo, error) {
+	return s.repo.GetBudgetInfo(budgetID)
+}

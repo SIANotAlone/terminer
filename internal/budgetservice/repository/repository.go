@@ -22,6 +22,8 @@ type Budget interface {
 
 	GetBudgetOwnerID(budgetID uuid.UUID) (uuid.UUID, error)
 	GetCurrencies() ([]models.Currency, error)
+
+	GetBudgetInfo(budgetID uuid.UUID) (*models.BudgetInfo, error)
 }
 
 type Goal interface {

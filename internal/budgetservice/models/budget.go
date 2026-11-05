@@ -52,3 +52,17 @@ type Currency struct {
 	Symbol string `json:"symbol"`
 	Name   string `json:"name"`
 }
+
+type BudgetInfo struct {
+	BudgetName      string    `json:"budget_name"`
+	OwnerName       string    `json:"owner_name"`
+	OwnerEmail      string    `json:"owner_email"`
+	BudgetType      string    `json:"budget_type"`
+	CreatedAt       time.Time `json:"created_at"`
+	BudgetStartDate time.Time `json:"budget_start_date"`
+	BudgetEndDate   time.Time `json:"budget_end_date"`
+	BudgetCurrency  string    `json:"budget_currency"`
+	CurrencyCode    string    `json:"currency_code"`
+	CurrencySymbol  string    `json:"currency_symbol"`
+	IsArchived      bool      `json:"is_archived"`
+}
